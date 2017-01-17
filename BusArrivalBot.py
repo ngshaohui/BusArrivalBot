@@ -1,25 +1,20 @@
 import logging
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 import requests
 from datetime import datetime
+from os import environ
 import dateutil.parser
 import json
 from geopy.distance import vincenty
 
-from credentials import TOKEN, ACCOUNTKEY
+from credentials import APP_URL, TOKEN, ACCOUNTKEY
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
 #non-bot stuff
-def sortLong(item):
-    return item["Longitude"]
-
-def sortLat(item):
-    return item["Latitude"]
-
 def getBusses(busStopID):
     #API parameters
     target = 'http://datamall2.mytransport.sg/ltaodataservice/BusArrival'
@@ -33,24 +28,6 @@ def getBusses(busStopID):
     #Obtain results
     return requests.get(target, headers = headers, params = params)
 
-def getStopsList():
-    target = 'http://datamall2.mytransport.sg/ltaodataservice/BusStops?$skip='
-    stops = [] #store all the stops in this array
-    skips = 0
-
-    #Build query string
-    headers = { 'AccountKey': ACCOUNTKEY,
-    'accept': 'application/json'}
-
-    while True:
-        #use skips since API can only return 50 results at once
-        r = requests.get(target + str(skips), headers = headers)
-        r = r.json()
-        if not r["value"]: #break loop when resulting json is empty
-            break
-        stops += r["value"] #append to array of stops
-        skips += 50
-    return stops
 
 def arrivals(bot, update):
     chat_id = update.message.chat_id
@@ -258,7 +235,7 @@ class KDTree:
 
         return champion
 
-#bot function
+#bot functions
 def start(bot, update):
     chat_id = update.message.chat_id
     text = "Use /arrivals StopID to retrieve bus arrival timings for a particular stop.\n"
@@ -267,14 +244,6 @@ def start(bot, update):
     text = text + "Do note that this is still a work in progress, so bugs may be present\n"
     text = text + "Please report any bugs you find to shaohui@u.nus.edu"
     bot.sendMessage(chat_id=chat_id, text=text)
-
-def echo(bot, update):
-    chat_id = update.message.chat_id
-    text = update.message.text[5:]
-    if len(text):
-        bot.sendMessage(chat_id=chat_id, text=text)
-    else:
-        bot.sendMessage(chat_id=chat_id, text="Please enter a message")
 
 def location(bot, update):
     chat_id = update.message.chat_id
@@ -295,8 +264,8 @@ def location(bot, update):
     
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    bot.sendMessage(chat_id,
-    text="Here are the 5 closest bus stops:", reply_markup=reply_markup)
+    text = "Here are the 5 closest bus stops:"
+    bot.sendMessage(chat_id=chat_id, text=text, reply_markup=reply_markup)
 
 def help(bot, update):
     start(bot, update) #print start message as placeholder since I can't think of anything
@@ -316,9 +285,10 @@ def button(bot, update):
 
 def main():
     #initialise KD Tree for bus stop searching
-    stopsList = getStopsList()
-    longSorted = sorted(stopsList, key=sortLong)
-    latSorted = sorted(stopsList, key=sortLat)
+    with open('stops.json') as json_data:
+        stopsList = json.load(json_data)
+    latSorted = stopsList["latSorted"]
+    longSorted = stopsList["longSorted"]
 
     #using global variable so that it only needs to be initialised once
     global stopsTree
@@ -327,16 +297,21 @@ def main():
     # Create the Updater and pass it your bot's token.
     updater = Updater(TOKEN)
 
+    # Initialise bot
+    global bot
+    bot = Bot(token=TOKEN)
+
+    # setup webhook
+    PORT = int(environ.get('PORT', '5000'))
+    updater.start_webhook(listen="0.0.0.0", port=PORT, url_path=TOKEN)
+    updater.bot.setWebhook(APP_URL + TOKEN)
+
     updater.dispatcher.add_handler(CommandHandler('start', start))
-    updater.dispatcher.add_handler(CommandHandler('echo', echo))
     updater.dispatcher.add_handler(CommandHandler('arrivals', arrivals))
     updater.dispatcher.add_handler(MessageHandler(Filters.location, location))
     updater.dispatcher.add_handler(CallbackQueryHandler(button))
     updater.dispatcher.add_handler(CommandHandler('help', help))
     updater.dispatcher.add_error_handler(error)
-
-    # Start the Bot
-    updater.start_polling()
 
     # Run the bot until the user presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT
