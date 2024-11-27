@@ -7,7 +7,7 @@ from decouple import config
 
 from custom_typings import BusStop
 
-URL_GET_all_stops = 'https://datamall2.mytransport.sg/ltaodataservice/Busall_stops'
+URL_GET_ALL_STOPS = 'https://datamall2.mytransport.sg/ltaodataservice/Busall_stops'
 
 
 def main():
@@ -18,8 +18,8 @@ def main():
     headers = {'AccountKey': config('ACCOUNT_KEY')}
 
     while True:
-        req = requests.get(f'{URL_GET_all_stops}?$skip={skips}', headers=headers)
-        json_data = req.json()
+        res = requests.get(f'{URL_GET_ALL_STOPS}?$skip={skips}', headers=headers)
+        json_data = res.json()
         if not json_data["value"]:  # break loop when resulting json is empty
             break
         fetched_all_stops: list[BusStop] = json_data["value"]
