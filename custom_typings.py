@@ -22,7 +22,9 @@ class NextBusInfo(TypedDict):
 
 class BusInfo(TypedDict):
     ServiceNo: str
-    NextBus: list[NextBusInfo]
+    NextBus: NextBusInfo
+    NextBus2: NextBusInfo
+    NextBus3: NextBusInfo
 
 
 class BusArrivalServiceResponse(TypedDict):
