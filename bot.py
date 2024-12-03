@@ -28,9 +28,11 @@ logger = logging.getLogger(__name__)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /start is issued."""
     await update.message.reply_text(
-        """Use the BusStopCode to get arrival timings for a particular stop.
+        f"""Use the BusStopCode to get arrival timings for a particular stop.
 e.g. 08031
 You can also send your location to find the nearest stops
+
+{config("VERSION")}
 """
     )
 
