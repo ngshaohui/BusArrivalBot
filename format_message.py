@@ -42,10 +42,13 @@ def make_next_bus_msg(
     TODO consider adding legend
     TODO describe
     '''
+    if len(services) == 0:
+        return 'No service information'
+
     title = f"{bus_stop['BusStopCode']} | {bus_stop['Description']}"
     # use partial to repeatedly pass the same argument cur_unix_time into the make_bus_arrivals_msg
     # while iterating through list of busses in services
     arrivals = map(partial(make_bus_arrivals_msg, cur_unix_time=cur_unix_time),
                    services)
     arrivals_text = ''.join(arrivals)
-    return f'{title}\n\n{arrivals_text}'
+    return f'{title}\n{arrivals_text}'
