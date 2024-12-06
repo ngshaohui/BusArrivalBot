@@ -11,7 +11,7 @@ from telegram.ext import (Application, CallbackQueryHandler, CommandHandler,
 from bus_arrival import get_arriving_busses
 from bus_stops import GetNearestStops, GetStopInfo, nearest_stops_utility
 from custom_typings import AllBusStops, BusStop
-from format_message import make_next_bus_msg
+from format_message import next_bus_msg
 
 # Enable logging
 logging.basicConfig(
@@ -74,7 +74,7 @@ def button_handler(get_stop_info: GetStopInfo) -> Callable:
         stop_id = query.data
         stop_info = get_stop_info(stop_id)
         busses = get_arriving_busses(stop_id)  # stop_id should never be None
-        reply_msg = make_next_bus_msg(stop_info, busses, int(time.time()))
+        reply_msg = next_bus_msg(stop_info, busses, int(time.time()))
 
         await query.answer()
         await query.edit_message_text(text=reply_msg)
@@ -97,7 +97,7 @@ def message_handler(get_stop_info: GetStopInfo) -> Callable:
             return
         # valid
         busses = get_arriving_busses(user_msg)
-        reply_msg = make_next_bus_msg(stop_info, busses, int(time.time()))
+        reply_msg = next_bus_msg(stop_info, busses, int(time.time()))
         await update.message.reply_text(reply_msg)
     return message
 

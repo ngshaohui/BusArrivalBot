@@ -7,32 +7,36 @@ from custom_typings import BusInfo, BusStop
 # TODO test
 
 
-def make_bus_arrivals_msg(bus: BusInfo, cur_unix_time: int) -> str:
+def bus_arrivals_msg(bus: BusInfo, cur_unix_time: int) -> str:
     '''
     TODO describe
     '''
+    next_bus = get_arrival_time(
+        bus["NextBus"]["EstimatedArrival"], cur_unix_time)
+    next_bus2 = get_arrival_time(
+        bus["NextBus2"]["EstimatedArrival"], cur_unix_time)
+    next_bus3 = get_arrival_time(
+        bus["NextBus3"]["EstimatedArrival"], cur_unix_time)
 
     return f'''
 {bus["ServiceNo"]}
-Next: {get_arrival_time(bus["NextBus"]["EstimatedArrival"], cur_unix_time)}
-Subsequent: {get_arrival_time(
-        bus["NextBus2"]["EstimatedArrival"], cur_unix_time)}
+{next_bus}    |    {next_bus2}    |    {next_bus3}
 '''
 
 
 def get_arrival_time(arrival_time: str, cur_unix_time: int) -> str:
     '''
-    TODO describe
+    get human readable estimated arrival time
     '''
     if arrival_time == '':
         return 'N.A.'
     arrival_time_mins = get_arrival_time_mins(arrival_time, cur_unix_time)
     if arrival_time_mins < 1:
-        return 'arriving...'
+        return 'Arr.'
     return f'{arrival_time_mins} min'
 
 
-def make_next_bus_msg(
+def next_bus_msg(
     bus_stop: BusStop,
     services: list[BusInfo],
     cur_unix_time: int
@@ -42,13 +46,13 @@ def make_next_bus_msg(
     TODO consider adding legend
     TODO describe
     '''
+    title = f"{bus_stop['Description']} | {bus_stop['BusStopCode']}"
     if len(services) == 0:
-        return 'No service information'
+        return f'{title}\n\nNo service information'
 
-    title = f"{bus_stop['BusStopCode']} | {bus_stop['Description']}"
-    # use partial to repeatedly pass the same argument cur_unix_time into the make_bus_arrivals_msg
+    # use partial to repeatedly pass the same argument cur_unix_time into the bus_arrivals_msg
     # while iterating through list of busses in services
-    arrivals = map(partial(make_bus_arrivals_msg, cur_unix_time=cur_unix_time),
+    arrivals = map(partial(bus_arrivals_msg, cur_unix_time=cur_unix_time),
                    services)
     arrivals_text = ''.join(arrivals)
     return f'{title}\n{arrivals_text}'
