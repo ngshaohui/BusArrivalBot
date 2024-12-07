@@ -30,7 +30,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         f"""Use the BusStopCode to get arrival timings for a particular stop.
 e.g. 08031
-You can also send your location to find the nearest stops
+
+You can also send your location to find the nearest stops!
 
 {config("VERSION")}
 """
@@ -63,42 +64,58 @@ def location_handler(get_nearest_stops: GetNearestStops) -> Callable:
     return location
 
 
+def make_refresh_button(stop_id: str) -> list[list[InlineKeyboardButton]]:
+    "button to refresh arrival timings"
+    return [[
+        InlineKeyboardButton(f"Refresh", callback_data=stop_id)
+    ]]
+
+
 def button_handler(get_stop_info: GetStopInfo) -> Callable:
     """
-    TODO describe
+    get button selection callback handler
     """
     async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Parses the CallbackQuery and updates the message text."""
         query = update.callback_query
-
         stop_id = query.data
+
+        # craft message
         stop_info = get_stop_info(stop_id)
         busses = get_arriving_busses(stop_id)  # stop_id should never be None
         reply_msg = next_bus_msg(stop_info, busses, int(time.time()))
 
+        # refresh button
+        reply_markup = InlineKeyboardMarkup(make_refresh_button(stop_id))
+
         await query.answer()
-        await query.edit_message_text(text=reply_msg)
+        await query.edit_message_text(text=reply_msg, reply_markup=reply_markup)
 
     return button
 
 
 def message_handler(get_stop_info: GetStopInfo) -> Callable:
     """
-    TODO describe
+    get handler for user supplied text messages
     """
     async def message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         # check if user supplied a valid BusStopCode
-        user_msg = update.message.text
+        user_stop_id = update.message.text
 
-        # invalid
-        stop_info = get_stop_info(user_msg)
+        # user_stop_id is invalid
+        stop_info = get_stop_info(user_stop_id)
         if stop_info is None:
             await update.message.reply_text("Unknown bus stop code")
             return
-        # valid
-        busses = get_arriving_busses(user_msg)
+
+        # craft message
+        busses = get_arriving_busses(user_stop_id)
         reply_msg = next_bus_msg(stop_info, busses, int(time.time()))
-        await update.message.reply_text(reply_msg)
+
+        # refresh button
+        reply_markup = InlineKeyboardMarkup(make_refresh_button(user_stop_id))
+
+        await update.message.reply_text(reply_msg, reply_markup=reply_markup)
     return message
 
 

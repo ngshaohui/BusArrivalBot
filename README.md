@@ -53,9 +53,9 @@ python -m bot
 
 ### Milestone 2
 
-- Save stops (favourites)
+- Save stops as favourites
 - Rate limiting
-- Re-fetch
+- Refresh button (done)
 
 ### Milestone 3
 
