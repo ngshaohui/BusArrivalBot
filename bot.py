@@ -145,7 +145,8 @@ def main() -> None:
     application.add_handler(MessageHandler(
         filters.LOCATION, location_handler(get_nearest_stops)))
     application.add_handler(CallbackQueryHandler(
-        button_handler(get_stop_info)))
+        button_handler(get_stop_info),
+        pattern=lambda x: get_stop_info(x) is not None))
 
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)
