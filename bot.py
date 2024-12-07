@@ -5,6 +5,7 @@ from typing import Callable
 
 from decouple import config
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.error import BadRequest
 from telegram.ext import (Application, CallbackQueryHandler, CommandHandler,
                           ContextTypes, MessageHandler, filters)
 
@@ -88,8 +89,12 @@ def button_handler(get_stop_info: GetStopInfo) -> Callable:
         # refresh button
         reply_markup = InlineKeyboardMarkup(make_refresh_button(stop_id))
 
-        await query.answer()
-        await query.edit_message_text(text=reply_msg, reply_markup=reply_markup)
+        try:
+            await query.answer()
+            await query.edit_message_text(text=reply_msg, reply_markup=reply_markup)
+        except BadRequest:
+            # ignore error messages caused by repeated messages to mute errors
+            pass
 
     return button
 

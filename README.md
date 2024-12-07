@@ -51,10 +51,9 @@ python -m bot
 - Search for busses by location and bus stop code (done)
 - Host bot on server (done)
 
-### Milestone 2
+### Milestone 2 (done)
 
-- Save stops as favourites
-- Rate limiting
+- Rate limiting (done)
 - Refresh button (done)
 
 ### Milestone 3
@@ -64,4 +63,4 @@ python -m bot
 
 ### Milestone 4
 
-- Webhooks
+- Save stops as favourites
