@@ -48,19 +48,24 @@ python -m bot
 
 ### Milestone 1 (done)
 
-- Search for busses by location and bus stop code (done)
-- Host bot on server (done)
+- [x] Search for busses by location and bus stop code
+- [x] Host bot on server
 
 ### Milestone 2 (done)
 
-- Rate limiting (done)
-- Refresh button (done)
+- [x] Rate limiting (done)
+- [x] Refresh button (done)
 
 ### Milestone 3
 
-- Search for bus stop
-- Bus route info
+- [ ] Search for bus stop
+- [ ] Bus route info
+
+#### Chores
+
+- [ ] Handle data leak from cache implementation
+- [ ] Handle request timeouts and error codes from LTA Datamall
 
 ### Milestone 4
 
-- Save stops as favourites
+- [ ] Save stops as favourites

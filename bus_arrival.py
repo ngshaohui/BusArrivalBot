@@ -41,6 +41,8 @@ def get_arriving_busses(bus_stop_code: str) -> list[BusInfo]:
 def fetch_arriving_busses(bus_stop_code: str) -> list[BusInfo]:
     """
     TODO describe
+    TODO add try-except to handle non status 200 responses
+    TODO add timeout for responses
     """
     params = {'BusStopCode': bus_stop_code}
     headers = {'AccountKey': config('ACCOUNT_KEY')}
