@@ -10,7 +10,9 @@ from telegram.ext import (Application, CallbackQueryHandler, CommandHandler,
                           ContextTypes, MessageHandler, filters)
 
 from bus_arrival import get_arriving_busses
-from bus_stops import GetNearestStops, GetStopInfo, nearest_stops_utility
+from bus_stops import (
+    GetNearestStops, GetStopInfo, SearchPossibleStops,
+    nearest_stops_utility)
 from custom_typings import AllBusStops, BusStop
 from format_message import next_bus_msg
 
@@ -124,7 +126,7 @@ def message_handler(get_stop_info: GetStopInfo) -> Callable:
     return message
 
 
-def init() -> tuple[GetNearestStops, GetStopInfo]:
+def init() -> tuple[GetNearestStops, GetStopInfo, SearchPossibleStops]:
     """initializes application state"""
     with open("bus_stops.json") as f:
         all_stops: AllBusStops = json.loads(f.read())
@@ -135,7 +137,7 @@ def init() -> tuple[GetNearestStops, GetStopInfo]:
 def main() -> None:
     """Start the bot."""
     # Init application state
-    get_nearest_stops, get_stop_info = init()
+    get_nearest_stops, get_stop_info, _ = init()
 
     # Create the Application and pass it your bot's token.
     application = Application.builder().token(config("BOT_TOKEN")).build()

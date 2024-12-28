@@ -1,14 +1,18 @@
 from typing import Callable
-from custom_typings import BusStop, Coordinate
+
 from scipy.spatial import cKDTree as KDTree
+
+from bus_stop_search_map import transform_query_token
+from custom_typings import BusStop, Coordinate
 
 type GetNearestStops = Callable[[str, str], str]
 type GetStopInfo = Callable[[str], BusStop | None]
+type SearchPossibleStops = Callable[[str], list[BusStop]]
 
 
 def nearest_stops_utility(
         stops: list[BusStop]
-) -> tuple[GetNearestStops, GetStopInfo]:
+) -> tuple[GetNearestStops, GetStopInfo, SearchPossibleStops]:
     """
     TODO description
     TODO usage instructions
@@ -42,4 +46,50 @@ def nearest_stops_utility(
             return None
         return stops_map[bus_stop_code]
 
-    return get_nearest_stops, get_stop_info
+    def create_token_map(stops: list[BusStop]) -> dict[str, set[str]]:
+        """
+        create map of word tokens to BusStopCodes
+        """
+        token_map: dict[str, set[str]] = {}
+        for stop in stops:
+            tokens = stop["Description"].lower().split()
+
+            for token in tokens:
+                if token not in token_map:
+                    # create set if it does not already exist
+                    token_map[token] = set()
+                token_map[token].add(stop["BusStopCode"])
+
+        return token_map
+
+    token_map = create_token_map(stops)
+
+    def search_possible_stops(query: str) -> list[BusStop]:
+        """
+        get a list of bus stops that match a search query
+        """
+        query_tokens = query.lower().split()
+        m_query_tokens = map(transform_query_token, query_tokens)
+        stop_ids_set: set[str] = set()
+
+        for query_token in m_query_tokens:
+            if query_token in token_map:
+                if len(stop_ids_set) == 0:
+                    # populate empty set
+                    stop_ids_set.update(token_map[query_token])
+                else:
+                    stop_ids_set = set.intersection(
+                        stop_ids_set,
+                        token_map[query_token]
+                    )
+
+        potential_bus_stops = map(get_stop_info, stop_ids_set)
+        bus_stops = filter(lambda x: x is not None, potential_bus_stops)
+        # TODO sort
+        return list(bus_stops)
+
+    return (
+        get_nearest_stops,
+        get_stop_info,
+        search_possible_stops
+    )
