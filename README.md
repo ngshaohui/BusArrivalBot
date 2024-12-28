@@ -58,7 +58,7 @@ python -m bot
 
 ### Milestone 3
 
-- [ ] Search for bus stop
+- [x] Search for bus stop
 - [ ] Bus route info
 
 #### Chores
@@ -69,3 +69,11 @@ python -m bot
 ### Milestone 4
 
 - [ ] Save stops as favourites
+
+## Inconsistency of result displays
+
+Searching for bus stops yields the results in a text message, whereas location search displays it as inline keyboard buttons.
+
+The consideration was that inline buttons are not persistent, so it makes it harder to search.
+
+Can consider both approaches to see which provides a better UX.

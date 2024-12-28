@@ -56,3 +56,16 @@ def next_bus_msg(
                    services)
     arrivals_text = ''.join(arrivals)
     return f'{title}\n{arrivals_text}'
+
+
+def bus_stop_search_msg(possible_stops: list[BusStop]) -> str:
+    """
+    display list of stops matching search query
+    """
+    def format_result(bus_stop: BusStop) -> str:
+        return f"/{bus_stop['BusStopCode']} {bus_stop['Description']}\n"
+
+    title = f"{len(possible_stops)} Bus stops matching the search query"
+    stops = map(format_result, possible_stops)
+    stops_text = ''.join(stops)
+    return f"{title}\n\n{stops_text}"

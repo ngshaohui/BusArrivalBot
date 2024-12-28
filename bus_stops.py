@@ -64,11 +64,11 @@ def nearest_stops_utility(
 
     token_map = create_token_map(stops)
 
-    def search_possible_stops(query: str) -> list[BusStop]:
+    def search_possible_stops(query: list[str]) -> list[BusStop]:
         """
         get a list of bus stops that match a search query
         """
-        query_tokens = query.lower().split()
+        query_tokens = map(lambda x: x.lower(), query)
         m_query_tokens = map(transform_query_token, query_tokens)
         stop_ids_set: set[str] = set()
 

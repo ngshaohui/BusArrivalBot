@@ -14,7 +14,7 @@ from bus_stops import (
     GetNearestStops, GetStopInfo, SearchPossibleStops,
     nearest_stops_utility)
 from custom_typings import AllBusStops, BusStop
-from format_message import next_bus_msg
+from format_message import bus_stop_search_msg, next_bus_msg
 
 # Enable logging
 logging.basicConfig(
@@ -85,6 +85,9 @@ def button_handler(get_stop_info: GetStopInfo) -> Callable:
 
         # craft message
         stop_info = get_stop_info(stop_id)
+        if stop_info is None:
+            await update.message.reply_text("Unknown bus stop code")
+            return
         busses = get_arriving_busses(stop_id)  # stop_id should never be None
         reply_msg = next_bus_msg(stop_info, busses, int(time.time()))
 
@@ -126,6 +129,48 @@ def message_handler(get_stop_info: GetStopInfo) -> Callable:
     return message
 
 
+def search_handler(search_possible_stops: SearchPossibleStops) -> Callable:
+    """
+    get button selection callback handler
+    """
+    async def search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Parses the CallbackQuery and updates the message text."""
+        search_query = context.args
+
+        # craft message
+        possible_stops = search_possible_stops(search_query)
+        reply_msg = bus_stop_search_msg(possible_stops)
+
+        await update.message.reply_text(text=reply_msg)
+
+    return search
+
+
+def bus_stop_code_handler(get_stop_info: GetStopInfo) -> Callable:
+    """
+    get handler for pseudo bus stop code commands
+    """
+    async def bus_stop_code(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Parses the CallbackQuery and updates the message text."""
+        full_text = update.message.text
+        stop_id = full_text.split()[0].split('/')[1]
+
+        # craft message
+        stop_info = get_stop_info(stop_id)
+        if stop_info is None:
+            await update.message.reply_text("Unknown bus stop code")
+            return
+        busses = get_arriving_busses(stop_id)
+        reply_msg = next_bus_msg(stop_info, busses, int(time.time()))
+
+        # refresh button
+        reply_markup = InlineKeyboardMarkup(make_refresh_button(stop_id))
+
+        await update.message.reply_text(text=reply_msg, reply_markup=reply_markup)
+
+    return bus_stop_code
+
+
 def init() -> tuple[GetNearestStops, GetStopInfo, SearchPossibleStops]:
     """initializes application state"""
     with open("bus_stops.json") as f:
@@ -137,7 +182,7 @@ def init() -> tuple[GetNearestStops, GetStopInfo, SearchPossibleStops]:
 def main() -> None:
     """Start the bot."""
     # Init application state
-    get_nearest_stops, get_stop_info, _ = init()
+    get_nearest_stops, get_stop_info, search_possible_stops = init()
 
     # Create the Application and pass it your bot's token.
     application = Application.builder().token(config("BOT_TOKEN")).build()
@@ -145,6 +190,13 @@ def main() -> None:
     # on different commands
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", start))
+    application.add_handler(CommandHandler(
+        "search", search_handler(search_possible_stops)))
+
+    # add psuedo command to handle BusStopCode e.g. /08031
+    for i in range(99999 + 1):
+        application.add_handler(CommandHandler(
+            f'{i:05}', bus_stop_code_handler(get_stop_info)))
 
     # on non command i.e message
     application.add_handler(MessageHandler(
