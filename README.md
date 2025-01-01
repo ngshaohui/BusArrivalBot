@@ -59,12 +59,14 @@ python -m bot
 ### Milestone 3
 
 - [x] Search for bus stop
-- [ ] Bus route info
+- [x] Bus route info
 
 #### Chores
 
 - [ ] Handle data leak from cache implementation
 - [ ] Handle request timeouts and error codes from LTA Datamall
+- [ ] Fix comments
+- [ ] Typecheck
 
 ### Milestone 4
 
