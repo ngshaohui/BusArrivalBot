@@ -18,15 +18,6 @@ def bus_route_utility(bus_routes: list[BusRoute]) -> GetBusRoute:
             bus_route_map[service_number] = []
         bus_route_map[service_number].append(route['BusStopCode'])
 
-    max_num = ""
-    max_stops = 0
-    for num, route in bus_route_map.items():
-        if len(route) > max_stops:
-            max_stops = len(route)
-            max_num = num
-
-    print(max_num, max_stops)
-
     def get_bus_route(bus_number: str) -> list[str] | None:
         """
         search for bus stops within a route
