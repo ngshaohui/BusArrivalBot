@@ -10,11 +10,10 @@ from telegram.ext import (Application, CallbackQueryHandler, CommandHandler,
                           ContextTypes, MessageHandler, filters)
 
 from bus_arrival import get_arriving_busses
-from bus_stops import (
-    GetNearestStops, GetStopInfo, SearchPossibleStops,
-    nearest_stops_utility)
-from custom_typings import AllBusStops, BusStop
-from format_message import bus_stop_search_msg, next_bus_msg
+from bus_stops import GetNearestStops, GetStopInfo, SearchPossibleStops
+from custom_typings import AllBusRoutes, AllBusStops, BusStop
+from format_message import bus_stop_search_msg, next_bus_msg, bus_route_msg
+from service_integrator import GetRouteStops, init_integrator
 
 # Enable logging
 logging.basicConfig(
@@ -171,18 +170,43 @@ def bus_stop_code_handler(get_stop_info: GetStopInfo) -> Callable:
     return bus_stop_code
 
 
-def init() -> tuple[GetNearestStops, GetStopInfo, SearchPossibleStops]:
+def bus_route_handler(get_route_stops: GetRouteStops) -> Callable:
+    """
+    TODO describe
+    """
+    async def bus_route(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if context.args is None:
+            await update.message.reply_text("Please provide a bus number")
+            return
+
+        bus_number = context.args[0]
+
+        # craft message
+        route_info = get_route_stops(bus_number)
+        if route_info is None:
+            await update.message.reply_text("Unknown bus number")
+            return
+        reply_msg = bus_route_msg(bus_number, route_info)
+
+        await update.message.reply_text(text=reply_msg)
+
+    return bus_route
+
+
+def init() -> tuple[GetNearestStops, GetStopInfo, SearchPossibleStops, GetRouteStops]:
     """initializes application state"""
-    with open("bus_stops.json") as f:
-        all_stops: AllBusStops = json.loads(f.read())
+    with open("bus_stops.json") as f1, open("bus_routes.json") as f2:
+        all_stops: AllBusStops = json.loads(f1.read())
         bus_stops = all_stops["bus_stops"]
-        return nearest_stops_utility(bus_stops)
+        all_routes: AllBusRoutes = json.loads(f2.read())
+        bus_routes = all_routes["bus_routes"]
+        return init_integrator(bus_routes, bus_stops)
 
 
 def main() -> None:
     """Start the bot."""
     # Init application state
-    get_nearest_stops, get_stop_info, search_possible_stops = init()
+    get_nearest_stops, get_stop_info, search_possible_stops, get_route_stops = init()
 
     # Create the Application and pass it your bot's token.
     application = Application.builder().token(config("BOT_TOKEN")).build()
@@ -192,6 +216,9 @@ def main() -> None:
     application.add_handler(CommandHandler("help", start))
     application.add_handler(CommandHandler(
         "search", search_handler(search_possible_stops)))
+    application.add_handler(CommandHandler(
+        "route", bus_route_handler(get_route_stops)
+    ))
 
     # add psuedo command to handle BusStopCode e.g. /08031
     for i in range(99999 + 1):

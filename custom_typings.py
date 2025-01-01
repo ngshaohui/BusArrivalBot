@@ -7,6 +7,7 @@ type TimestampISO8601 = str  # "2024-11-26T22:04:48+08:00"
 
 class BusRoute(TypedDict):
     ServiceNo: str
+    Direction: int
     StopSequence: int
     BusStopCode: str
     Distance: int
@@ -19,7 +20,7 @@ class BusRoute(TypedDict):
 
 
 class AllBusRoutes(TypedDict):
-    bus_stops: list[BusRoute]
+    bus_routes: list[BusRoute]
     checksum: str
 
 
