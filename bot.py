@@ -170,9 +170,17 @@ def bus_stop_code_handler(get_stop_info: GetStopInfo) -> Callable:
     return bus_stop_code
 
 
+def make_change_route_btn(bus_number: str, direction: int) -> list[list[InlineKeyboardButton]]:
+    "button to refresh arrival timings"
+    return [[
+        InlineKeyboardButton(
+            f"Change direction", callback_data=f"{bus_number},{direction}")
+    ]]
+
+
 def bus_route_handler(get_route_stops: GetRouteStops) -> Callable:
     """
-    TODO describe
+    get handler for getting bus route information
     """
     async def bus_route(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if context.args is None:
@@ -182,15 +190,55 @@ def bus_route_handler(get_route_stops: GetRouteStops) -> Callable:
         bus_number = context.args[0]
 
         # craft message
-        route_info = get_route_stops(bus_number)
+        route_info = get_route_stops(bus_number, 1)
         if route_info is None:
             await update.message.reply_text("Unknown bus number")
             return
         reply_msg = bus_route_msg(bus_number, route_info)
 
-        await update.message.reply_text(text=reply_msg)
+        # refresh button
+        reply_markup = InlineKeyboardMarkup(
+            make_change_route_btn(bus_number, 2))
+
+        await update.message.reply_text(text=reply_msg, reply_markup=reply_markup)
 
     return bus_route
+
+
+def route_direction_handler(get_route_stops: GetRouteStops) -> Callable:
+    """
+    get change route direction button selection callback handler
+    """
+    async def route_direction_handler_button(
+            update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """
+        gives the route for the other direction
+        """
+        query = update.callback_query
+        if query.data is None:
+            # ignore malformed requests
+            return
+        bus_number, direction_str = query.data.split(',')
+
+        # craft message
+        route_info = get_route_stops(bus_number, int(direction_str))
+        if route_info is None:
+            await update.message.reply_text("Unknown bus number")
+            return
+        reply_msg = bus_route_msg(bus_number, route_info)
+
+        # refresh button
+        reply_markup = InlineKeyboardMarkup(
+            make_change_route_btn(bus_number, 1 if direction_str == "2" else 2))
+
+        try:
+            await query.answer()
+            await query.edit_message_text(text=reply_msg, reply_markup=reply_markup)
+        except BadRequest:
+            # ignore error messages caused by repeated messages to mute errors
+            pass
+
+    return route_direction_handler_button
 
 
 def init() -> tuple[GetNearestStops, GetStopInfo, SearchPossibleStops, GetRouteStops]:
@@ -230,9 +278,10 @@ def main() -> None:
         filters.TEXT & ~filters.COMMAND, message_handler(get_stop_info)))
     application.add_handler(MessageHandler(
         filters.LOCATION, location_handler(get_nearest_stops)))
-    application.add_handler(CallbackQueryHandler(
-        button_handler(get_stop_info),
-        pattern=lambda x: get_stop_info(x) is not None))
+    application.add_handler(CallbackQueryHandler(button_handler(get_stop_info),
+                                                 pattern=r"\d{5}"))
+    application.add_handler(CallbackQueryHandler(route_direction_handler(get_route_stops),
+                                                 pattern=r"\d{1,3}\w?\,[12]"))
 
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)

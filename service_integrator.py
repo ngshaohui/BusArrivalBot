@@ -7,7 +7,7 @@ from custom_typings import BusRoute, BusStop
 from bus_route import bus_route_utility
 from bus_stops import nearest_stops_utility
 
-type GetRouteStops = Callable[[str], list[BusStop] | None]
+type GetRouteStops = Callable[[str, int], list[BusStop] | None]
 
 
 def init_integrator(
@@ -22,10 +22,15 @@ def init_integrator(
     # routes
     get_bus_route = bus_route_utility(bus_routes)
 
-    def get_route_stops(bus_number: str) -> list[BusStop] | None:
-        route = get_bus_route(bus_number)
+    def get_route_stops(bus_number: str, direction: int) -> list[BusStop] | None:
+        route = get_bus_route(bus_number, direction)
+
+        if route is None:
+            # possible that route 2 does not exist
+            route = get_bus_route(bus_number, 1)
         if route is None:
             return None
+
         route_stops = map(get_stop_info, route)
         return list(filter(lambda x: x is not None, route_stops))
 
