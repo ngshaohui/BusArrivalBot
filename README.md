@@ -71,6 +71,7 @@ python -m bot
 ### Milestone 4
 
 - [ ] Save stops as favourites
+- [ ] State busses not in service
 
 ## Inconsistency of result displays
 
