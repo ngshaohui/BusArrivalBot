@@ -18,10 +18,8 @@ def bus_arrivals_msg(bus: BusInfo, cur_unix_time: int) -> str:
     next_bus3 = get_arrival_time(
         bus["NextBus3"]["EstimatedArrival"], cur_unix_time)
 
-    return f'''
-{bus["ServiceNo"]}
-{next_bus}    |    {next_bus2}    |    {next_bus3}
-'''
+    return f'''{bus["ServiceNo"]}
+{next_bus}    |    {next_bus2}    |    {next_bus3}'''
 
 
 def get_arrival_time(arrival_time: str, cur_unix_time: int) -> str:
@@ -54,21 +52,22 @@ def next_bus_msg(
     # while iterating through list of busses in services
     arrivals = map(partial(bus_arrivals_msg, cur_unix_time=cur_unix_time),
                    services)
-    arrivals_text = ''.join(arrivals)
-    return f'{title}\n{arrivals_text}'
+    arrivals_text = '\n\n'.join(arrivals)
+    return f'{title}\n\n{arrivals_text}'
 
 
 def __format_result(bus_stop: BusStop) -> str:
-    return f"/{bus_stop['BusStopCode']} {bus_stop['Description']}\n"
+    return f"/{bus_stop['BusStopCode']} {bus_stop['Description']}"
 
 
 def bus_stop_search_msg(possible_stops: list[BusStop]) -> str:
     """
     display list of stops matching search query
     """
-    title = f"{len(possible_stops)} Bus stops matching the search query"
+    title = f"{len(possible_stops)} Bus stop{"" if len(
+        possible_stops) == 1 else "s"} matching the search query"
     stops = map(__format_result, possible_stops)
-    stops_text = ''.join(stops)
+    stops_text = '\n'.join(stops)
     return f"{title}\n\n{stops_text}"
 
 
@@ -78,5 +77,5 @@ def bus_route_msg(bus_number: str, stops: list[BusStop]) -> str:
     """
     title = f"Route for bus {bus_number}"
     stops = map(__format_result, stops)
-    stops_text = ''.join(stops)
+    stops_text = '\n'.join(stops)
     return f"{title}\n\n{stops_text}"
