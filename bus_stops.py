@@ -1,13 +1,13 @@
-from typing import Callable
+# workaround: pylance does not resolve cKDTree correctly
+from scipy.spatial import cKDTree as KDTree  # type: ignore[attr-defined]
 
-from scipy.spatial import cKDTree as KDTree
-
+from typing import Callable, Optional
 from bus_stop_search_map import transform_query_token
 from custom_typings import BusStop, Coordinate
 
-type GetNearestStops = Callable[[str, str], str]
+type GetNearestStops = Callable[[Coordinate, Optional[int]], list[BusStop]]
 type GetStopInfo = Callable[[str], BusStop | None]
-type SearchPossibleStops = Callable[[str], list[BusStop]]
+type SearchPossibleStops = Callable[[list[str]], list[BusStop]]
 
 
 def nearest_stops_utility(
@@ -22,7 +22,7 @@ def nearest_stops_utility(
         map(lambda stop: (stop["Latitude"], stop["Longitude"]), stops))
     kd_tree = KDTree(stop_coordinates)
 
-    def get_nearest_stops(coord: Coordinate, num_stops: int = 3) -> list[BusStop]:
+    def get_nearest_stops(coord: Coordinate, num_stops: Optional[int] = 3) -> list[BusStop]:
         _, nd_indexes = kd_tree.query([coord], k=num_stops)
         # convert numpy 2d array (with only 1 row) to list of integers
         # numpy_ndarray -> [[1, 2, 3]] -> [1, 2, 3]
@@ -84,9 +84,9 @@ def nearest_stops_utility(
                     )
 
         potential_bus_stops = map(get_stop_info, stop_ids_set)
-        bus_stops = filter(lambda x: x is not None, potential_bus_stops)
+        bus_stops = [stop for stop in potential_bus_stops if stop is not None]
         # TODO sort
-        return list(bus_stops)
+        return bus_stops
 
     return (
         get_nearest_stops,

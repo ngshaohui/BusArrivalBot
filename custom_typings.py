@@ -1,7 +1,7 @@
 from typing import TypedDict
 
 
-type Coordinate = tuple[int, int]
+type Coordinate = tuple[float, float]
 type TimestampISO8601 = str  # "2024-11-26T22:04:48+08:00"
 
 
@@ -28,8 +28,8 @@ class BusStop(TypedDict):
     BusStopCode: str
     RoadName: str
     Description: str
-    Latitude: str
-    Longitude: str
+    Latitude: float
+    Longitude: float
 
 
 class NextBusInfo(TypedDict):
