@@ -1,4 +1,9 @@
 .DS_Store
 .env
+*.db
+__pycache__
+
+bus_routes.json
+bus_stops.json
 
 /temp
