@@ -32,7 +32,7 @@ def init_integrator(
             return None
 
         route_stops = map(get_stop_info, route)
-        return list(filter(lambda x: x is not None, route_stops))
+        return [route for route in route_stops if route is not None]
 
     return (
         get_nearest_stops,

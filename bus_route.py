@@ -5,7 +5,7 @@ from typing import Callable
 
 from custom_typings import BusRoute
 
-type GetBusRoute = Callable[[str], list[str] | None]
+type GetBusRoute = Callable[[str, int], list[str] | None]
 
 
 def bus_route_utility(bus_routes: list[BusRoute]) -> GetBusRoute:

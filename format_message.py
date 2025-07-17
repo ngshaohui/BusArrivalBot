@@ -63,9 +63,9 @@ def bus_stop_search_msg(possible_stops: list[BusStop]) -> str:
     """
     display list of stops matching search query
     """
-    title = f"{len(possible_stops)} Bus stop{"" if len(
-        possible_stops) == 1 else "s"} matching the search query"
-    stops = map(__format_result, possible_stops)
+    title = f"""Showing {min(20, len(possible_stops))} out of {len(possible_stops)} bus stop{"" if len(
+        possible_stops) == 1 else "s"} matching the search query"""
+    stops = map(__format_result, possible_stops[:20])
     stops_text = '\n'.join(stops)
     return f"{title}\n\n{stops_text}"
 
@@ -75,6 +75,6 @@ def bus_route_msg(bus_number: str, stops: list[BusStop]) -> str:
     display list of stops within a bus route
     """
     title = f"Route for bus {bus_number}"
-    stops = map(__format_result, stops)
-    stops_text = '\n'.join(stops)
+    stops_text_ls = map(__format_result, stops)
+    stops_text = '\n'.join(stops_text_ls)
     return f"{title}\n\n{stops_text}"
