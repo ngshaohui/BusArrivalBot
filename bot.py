@@ -1,4 +1,3 @@
-import json
 import logging
 from typing import Callable
 
@@ -7,11 +6,11 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (Application, CallbackQueryHandler, CommandHandler,
                           ContextTypes, MessageHandler, filters)
 
-from bus_stops import GetNearestStops, GetStopInfo, SearchPossibleStops
 from custom_typings import AllBusRoutes, AllBusStops, BusStop
 from reply_handlers.callback_query_handler import bus_number_handler, route_direction_handler
 from reply_handlers.text_reply_handler import message_handler
-from service_integrator import GetRouteStops, init_integrator
+from scripts import fetch_routes, fetch_stops
+from service_integrator import ServiceIntegrator
 
 # Enable logging
 logging.basicConfig(
@@ -40,7 +39,7 @@ You can also send your location to find the nearest stops!
     )
 
 
-def location_handler(get_nearest_stops: GetNearestStops) -> Callable:
+def location_handler(service_integrator: ServiceIntegrator) -> Callable:
     """
     send prompt for users to select nearest bus stop (out of 3 candidates)
     """
@@ -57,7 +56,7 @@ def location_handler(get_nearest_stops: GetNearestStops) -> Callable:
         # get nearest stops
         latitude = update.message.location.latitude
         longitude = update.message.location.longitude
-        nearest_stops: list[BusStop] = get_nearest_stops(
+        nearest_stops: list[BusStop] = service_integrator.get_nearest_stops(
             (latitude, longitude), 3)
 
         # build keyboard
@@ -70,20 +69,19 @@ def location_handler(get_nearest_stops: GetNearestStops) -> Callable:
     return location
 
 
-def init() -> tuple[GetNearestStops, GetStopInfo, SearchPossibleStops, GetRouteStops]:
+def init_service_integrator() -> ServiceIntegrator:
     """initializes application state"""
-    with open("bus_stops.json") as f1, open("bus_routes.json") as f2:
-        all_stops: AllBusStops = json.loads(f1.read())
-        bus_stops = all_stops["bus_stops"]
-        all_routes: AllBusRoutes = json.loads(f2.read())
-        bus_routes = all_routes["bus_routes"]
-        return init_integrator(bus_routes, bus_stops)
+    all_stops: AllBusStops = fetch_stops.run()
+    bus_stops = all_stops["bus_stops"]
+    all_routes: AllBusRoutes = fetch_routes.run()
+    bus_routes = all_routes["bus_routes"]
+    return ServiceIntegrator(bus_routes, bus_stops)
 
 
 def main() -> None:
     """Start the bot."""
     # Init application state
-    get_nearest_stops, get_stop_info, search_possible_stops, get_route_stops = init()
+    service_integrator = init_service_integrator()
 
     # Create the Application and pass it your bot's token.
     application = Application.builder().token(
@@ -95,12 +93,12 @@ def main() -> None:
 
     # on non command i.e message
     application.add_handler(MessageHandler(
-        filters.TEXT, message_handler(get_route_stops, get_stop_info, search_possible_stops)))
+        filters.TEXT, message_handler(service_integrator)))
     application.add_handler(MessageHandler(
-        filters.LOCATION, location_handler(get_nearest_stops)))
-    application.add_handler(CallbackQueryHandler(bus_number_handler(get_stop_info),
+        filters.LOCATION, location_handler(service_integrator)))
+    application.add_handler(CallbackQueryHandler(bus_number_handler(service_integrator),
                                                  pattern=r"\d{5}"))
-    application.add_handler(CallbackQueryHandler(route_direction_handler(get_route_stops),
+    application.add_handler(CallbackQueryHandler(route_direction_handler(service_integrator),
                                                  pattern=r"\d{1,3}\w?\,[12]"))
 
     # Run the bot until the user presses Ctrl-C

@@ -7,7 +7,7 @@ from telegram.ext import ContextTypes
 
 from bus_stops import GetStopInfo, SearchPossibleStops
 from format_message import bus_route_msg, bus_stop_search_msg, next_bus_msg
-from service_integrator import GetRouteStops
+from service_integrator import GetRouteStops, ServiceIntegrator
 from .inline_buttons import make_change_route_btn, make_refresh_button
 from bus_arrival import get_arriving_busses
 
@@ -28,11 +28,7 @@ REGEX_SEARCH = r"\/?search\s*(.*)"
 # first character cannot be /
 
 
-def message_handler(
-        get_route_stops: GetRouteStops,
-        get_stop_info: GetStopInfo,
-        search_possible_stops: SearchPossibleStops
-) -> Callable:
+def message_handler(service_integrator: ServiceIntegrator) -> Callable:
     async def reply(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         """
         parse all text that the user sends
@@ -45,17 +41,17 @@ def message_handler(
 
         if match := re.match(REGEX_STOP_CODE, msg):
             stop_code = match.group(1)
-            await bus_stop_code(get_stop_info, update, stop_code)
+            await bus_stop_code(service_integrator.get_stop_info, update, stop_code)
         elif match := re.match(REGEX_BUS_NUM, msg, re.IGNORECASE):
             bus_number = match.group(1)
-            await bus_route(get_route_stops, update, bus_number)
+            await bus_route(service_integrator.get_route_stops, update, bus_number)
         elif match := re.match(REGEX_ROUTE, msg, re.IGNORECASE):
             bus_number = match.group(1)
-            await bus_route(get_route_stops, update, bus_number)
+            await bus_route(service_integrator.get_route_stops, update, bus_number)
         elif match := re.match(REGEX_SEARCH, msg, re.IGNORECASE):
             query_str = match.group(1)
             query: list[str] = re.split(r"\s", query_str)
-            await search(search_possible_stops, update, query)
+            await search(service_integrator.search_possible_stops, update, query)
         else:
             # unknown command message
             await unknown_command(update)

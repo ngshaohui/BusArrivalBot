@@ -45,8 +45,10 @@ def fetch_routes() -> list[BusRoute]:
     headers = {'AccountKey': config('ACCOUNT_KEY')}
 
     while True:
-        res = requests.get(f'{URL_GET_ALL_ROUTES}?$skip={
-                           skips}', headers=headers)
+        res = requests.get(
+            f'{URL_GET_ALL_ROUTES}?$skip={skips}',
+            headers=headers
+        )
         json_data = res.json()
         if not json_data["value"]:  # break loop when resulting json is empty
             break
@@ -56,15 +58,19 @@ def fetch_routes() -> list[BusRoute]:
     return all_routes
 
 
-def main():
+def run():
     routes = fetch_routes()
     all_routes: AllBusRoutes = {
         "checksum": bus_routes_checksum(routes),
         "bus_routes": routes
     }
 
+    return all_routes
+
+
+def main():
     with open('bus_routes.json', 'w') as outfile:
-        json.dump(all_routes, outfile)
+        json.dump(run(), outfile)
 
 
 if __name__ == "__main__":

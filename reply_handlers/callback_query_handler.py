@@ -6,13 +6,12 @@ from telegram.error import BadRequest
 from telegram.ext import ContextTypes
 
 from bus_arrival import get_arriving_busses
-from bus_stops import GetStopInfo
 from format_message import bus_route_msg, next_bus_msg
-from service_integrator import GetRouteStops
+from service_integrator import ServiceIntegrator
 from .inline_buttons import make_change_route_btn, make_refresh_button
 
 
-def route_direction_handler(get_route_stops: GetRouteStops) -> Callable:
+def route_direction_handler(service_integrator: ServiceIntegrator) -> Callable:
     async def route_direction_handler_button(
             update: Update,
             _: ContextTypes.DEFAULT_TYPE
@@ -27,7 +26,7 @@ def route_direction_handler(get_route_stops: GetRouteStops) -> Callable:
         bus_number, direction_str = query.data.split(',')
 
         # craft message
-        route_info = get_route_stops(bus_number, int(direction_str))
+        route_info = service_integrator.get_route_stops(bus_number, int(direction_str))
         if route_info is None:
             await query.edit_message_text("Unknown bus number")
             return
@@ -46,7 +45,7 @@ def route_direction_handler(get_route_stops: GetRouteStops) -> Callable:
     return route_direction_handler_button
 
 
-def bus_number_handler(get_stop_info: GetStopInfo) -> Callable:
+def bus_number_handler(service_integrator: ServiceIntegrator) -> Callable:
     """
     get button selection callback handler
     """
@@ -59,7 +58,7 @@ def bus_number_handler(get_stop_info: GetStopInfo) -> Callable:
         stop_id = query.data
 
         # craft message
-        stop_info = get_stop_info(stop_id)
+        stop_info = service_integrator.get_stop_info(stop_id)
         if stop_info is None:
             await query.edit_message_text("Unknown bus stop code")
             return
