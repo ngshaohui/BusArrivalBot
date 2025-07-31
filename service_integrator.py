@@ -11,8 +11,8 @@ type GetRouteStops = Callable[[str, int], list[BusStop] | None]
 
 
 class ServiceIntegrator:
-    def __init__(self, bus_routes: list[BusRoute], bus_stops: list[BusStop]) -> None:
-        self.refresh(bus_routes, bus_stops)
+    def __init__(self, bus_stops: list[BusStop], bus_routes: list[BusRoute]) -> None:
+        self.refresh(bus_stops, bus_routes)
 
     def get_route_stops(self, bus_number: str, direction: int) -> list[BusStop] | None:
         route = self.get_bus_route(bus_number, direction)
@@ -26,7 +26,7 @@ class ServiceIntegrator:
         route_stops = map(self.get_stop_info, route)
         return [route for route in route_stops if route is not None]
 
-    def refresh(self, bus_routes: list[BusRoute], bus_stops: list[BusStop]) -> None:
+    def refresh(self, bus_stops: list[BusStop], bus_routes: list[BusRoute]) -> None:
         """update functions"""
         self.get_bus_route = bus_route_utility(bus_routes)
         (self.get_nearest_stops,

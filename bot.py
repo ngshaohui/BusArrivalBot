@@ -1,12 +1,13 @@
 import logging
 from typing import Callable
 
+from apscheduler.schedulers.background import BackgroundScheduler
 from decouple import config
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (Application, CallbackQueryHandler, CommandHandler,
                           ContextTypes, MessageHandler, filters)
 
-from custom_typings import AllBusRoutes, AllBusStops, BusStop
+from custom_typings import AllBusRoutes, AllBusStops, BusRoute, BusStop
 from reply_handlers.callback_query_handler import bus_number_handler, route_direction_handler
 from reply_handlers.text_reply_handler import message_handler
 from scripts import fetch_routes, fetch_stops
@@ -69,19 +70,33 @@ def location_handler(service_integrator: ServiceIntegrator) -> Callable:
     return location
 
 
-def init_service_integrator() -> ServiceIntegrator:
-    """initializes application state"""
+def fetch_stops_and_routes() -> tuple[list[BusStop], list[BusRoute]]:
+    """Fetches bus stops and routes data."""
     all_stops: AllBusStops = fetch_stops.run()
     bus_stops = all_stops["bus_stops"]
     all_routes: AllBusRoutes = fetch_routes.run()
     bus_routes = all_routes["bus_routes"]
-    return ServiceIntegrator(bus_routes, bus_stops)
+    return bus_stops, bus_routes
+
+
+def refresh_service_integrator(service_integrator: ServiceIntegrator):
+    """refreshes the service integrator"""
+    def refresh() -> None:
+        service_integrator.refresh(*fetch_stops_and_routes())
+    return refresh
 
 
 def main() -> None:
     """Start the bot."""
     # Init application state
-    service_integrator = init_service_integrator()
+    service_integrator = ServiceIntegrator(*fetch_stops_and_routes())
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(refresh_service_integrator(service_integrator),
+                      trigger='cron',
+                      day_of_week='sun',
+                      hour=0,
+                      minute=0)
+    scheduler.start()
 
     # Create the Application and pass it your bot's token.
     application = Application.builder().token(
