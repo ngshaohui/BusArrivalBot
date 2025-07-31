@@ -6,9 +6,9 @@ Try it out at @BusArrivalBot
 
 ## Setup instructions
 
-This project manages its dependencies using `pipenv`
+This project manages its dependencies using `uv`
 
-[Install it first](https://pipenv.pypa.io/en/latest/index.html#install-pipenv-today) before proceeding
+[Install it first](https://docs.astral.sh/uv/getting-started/installation/) before proceeding
 
 ### Environment values
 
@@ -16,32 +16,14 @@ Create a file `.env` containing the keys from `.env.example`
 
 You will need a bot token from `@BotFather` to host your own instance of the bot
 
-### Install dependencies
-
-Install the dependencies from `Pipefile` and `Pipfile.lock`
-
-```shell
-python -m pipenv install
-```
-
-### Start virtual environment
-
-Start the virtual environment with the `pipenv shell`
-
-```shell
-python -m pipenv shell
-```
-
-Use `python -m` instead of just `pipenv shell` allows command history to be retained in the shell
-
 ### Start bot
 
 Run an instance of the bot
 
-Ensure that the virtual environment has been activated before running the command
+The dependencies in `pyproject.toml` will be installed automatically
 
 ```shell
-python -m bot
+uv run bot.py
 ```
 
 ## Milestones
@@ -61,17 +43,27 @@ python -m bot
 - [x] Search for bus stop
 - [x] Bus route info
 
-#### Chores
+### Milestone 4
+
+- [x] Generalise reply handler
+- [x] Scheduler for updating stops and routes
+
+### Milestone 5
+
+- [ ] Dockerfile
+- [ ] autopep8 and pylint configuration
+
+### Milestone 6
+
+- [ ] State busses not in service
+- [ ] Save stops as favourites
+
+### Chores
 
 - [ ] Handle data leak from cache implementation
 - [ ] Handle request timeouts and error codes from LTA Datamall
 - [ ] Fix comments
 - [ ] Typecheck
-
-### Milestone 4
-
-- [ ] Save stops as favourites
-- [ ] State busses not in service
 
 ## Inconsistency of result displays
 
