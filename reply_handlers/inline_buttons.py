@@ -8,7 +8,7 @@ def make_change_route_btn(
     return [
         [
             InlineKeyboardButton(
-                f"Change direction", callback_data=f"{bus_number},{direction}"
+                "Change direction", callback_data=f"{bus_number},{direction}"
             )
         ]
     ]
@@ -16,4 +16,4 @@ def make_change_route_btn(
 
 def make_refresh_button(stop_id: str) -> list[list[InlineKeyboardButton]]:
     "button to refresh arrival timings"
-    return [[InlineKeyboardButton(f"Refresh", callback_data=stop_id)]]
+    return [[InlineKeyboardButton("Refresh", callback_data=stop_id)]]

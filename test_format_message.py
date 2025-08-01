@@ -1,4 +1,3 @@
-import random
 import unittest
 from format_message import bus_stop_search_msg, next_bus_msg
 

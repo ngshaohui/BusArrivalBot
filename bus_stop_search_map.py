@@ -58,7 +58,6 @@ WORDS_MAP = {
     "schoolhouse": "s/h",  # KiddiWinkie S/H @ Mountbatten
     "house": "hse",
     "park": "pk",  # East Coast Pk Svc Rd
-    "terminal": "ter",
     "playground": "p/g",
     "tower": "twr",  # Suntec Twr Two
     "towers": "twrs",  # Lutheran Twrs
