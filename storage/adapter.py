@@ -5,21 +5,19 @@ type GetSavedStops = Callable[[int], list[str]]
 type SaveStops = Callable[[int, list[str]], bool]
 
 
-def storage_utility() -> tuple[GetSavedStops, SaveStops]:
-    """
-    TODO describe
-    """
-    con = sqlite3.connect("bus_arrival_bot.db")
-    return storage_utility_h(con)
+class StorageUtility:
+    def __init__(self, con: sqlite3.Connection | None = None):
+        if con is None:
+            self.con = sqlite3.connect("bus_arrival_bot.db")
+        else:
+            self.con = con
 
-
-def storage_utility_h(con: sqlite3.Connection) -> tuple[GetSavedStops, SaveStops]:
-    def get_saved_stops(chat_id: int) -> list[str]:
+    def get_saved_stops(self, chat_id: int) -> list[str]:
         """
         get list of BusStopCode user has saved
         """
         try:
-            cur = con.cursor()
+            cur = self.con.cursor()
             res = cur.execute(
                 """
             SELECT bus_stop_codes FROM saved_stops WHERE chat_id = ?;
@@ -36,14 +34,14 @@ def storage_utility_h(con: sqlite3.Connection) -> tuple[GetSavedStops, SaveStops
             print(f"SQLite error: {e}")
             return []
 
-    def save_stops(chat_id: int, stops: list[str]) -> bool:
+    def save_stops(self, chat_id: int, stops: list[str]) -> bool:
         """
         save list of BusStopCode in DB
         uperts record if chat_id already exists
         """
         saved_stops_str = ",".join(stops)
         try:
-            cur = con.cursor()
+            cur = self.con.cursor()
             cur.execute(
                 """
             INSERT INTO saved_stops (chat_id, bus_stop_codes) VALUES (?, ?)
@@ -53,12 +51,10 @@ def storage_utility_h(con: sqlite3.Connection) -> tuple[GetSavedStops, SaveStops
             """,
                 (chat_id, saved_stops_str),
             )
-            con.commit()
+            self.con.commit()
         except sqlite3.Error as e:
             # TODO handle error
             print(f"SQLite error: {e}")
             return False
         finally:
             return True
-
-    return get_saved_stops, save_stops
