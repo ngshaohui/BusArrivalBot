@@ -1,7 +1,8 @@
 import unittest
 from format_message import bus_stop_search_msg, next_bus_msg
+from custom_typings import BusStop, BusInfo
 
-STOPS = [
+STOPS: list[BusStop] = [
     {
         "BusStopCode": "14519",
         "RoadName": "Sentosa Gateway",
@@ -46,7 +47,7 @@ STOPS = [
     },
 ]
 
-BUS_123 = [
+BUS_123: list[BusInfo] = [
     {
         "ServiceNo": "123",
         "Operator": "SBST",

@@ -31,9 +31,14 @@ class BusStop(TypedDict):
     Latitude: float
     Longitude: float
 
-
 class NextBusInfo(TypedDict):
+    OriginCode: str
+    DestinationCode: str
     EstimatedArrival: TimestampISO8601
+    Monitored: int
+    Latitude: str
+    Longitude: str
+    VisitNumber: str
     Load: str
     Feature: str
     Type: str
@@ -41,6 +46,7 @@ class NextBusInfo(TypedDict):
 
 class BusInfo(TypedDict):
     ServiceNo: str
+    Operator: str
     NextBus: NextBusInfo
     NextBus2: NextBusInfo
     NextBus3: NextBusInfo
