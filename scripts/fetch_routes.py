@@ -9,7 +9,7 @@ from decouple import config
 
 from custom_typings import AllBusRoutes, BusRoute
 
-URL_GET_ALL_ROUTES = 'https://datamall2.mytransport.sg/ltaodataservice/BusRoutes'
+URL_GET_ALL_ROUTES = "https://datamall2.mytransport.sg/ltaodataservice/BusRoutes"
 
 
 def get_route_hash(stop: BusRoute) -> bytes:
@@ -42,13 +42,10 @@ def fetch_routes() -> list[BusRoute]:
     skips = 0  # use skips since API can only return 500 results at once
 
     # Build query string
-    headers = {'AccountKey': config('ACCOUNT_KEY')}
+    headers = {"AccountKey": config("ACCOUNT_KEY")}
 
     while True:
-        res = requests.get(
-            f'{URL_GET_ALL_ROUTES}?$skip={skips}',
-            headers=headers
-        )
+        res = requests.get(f"{URL_GET_ALL_ROUTES}?$skip={skips}", headers=headers)
         json_data = res.json()
         if not json_data["value"]:  # break loop when resulting json is empty
             break
@@ -62,14 +59,14 @@ def run():
     routes = fetch_routes()
     all_routes: AllBusRoutes = {
         "checksum": bus_routes_checksum(routes),
-        "bus_routes": routes
+        "bus_routes": routes,
     }
 
     return all_routes
 
 
 def main():
-    with open('bus_routes.json', 'w') as outfile:
+    with open("bus_routes.json", "w") as outfile:
         json.dump(run(), outfile)
 
 

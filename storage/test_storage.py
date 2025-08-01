@@ -40,5 +40,5 @@ class TestStorage(unittest.TestCase):
         self.assertEqual(stops, [])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

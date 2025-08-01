@@ -59,7 +59,9 @@ def message_handler(service_integrator: ServiceIntegrator) -> Callable:
     return reply
 
 
-async def bus_stop_code(get_stop_info: GetStopInfo, update: Update, stop_id: str) -> None:
+async def bus_stop_code(
+    get_stop_info: GetStopInfo, update: Update, stop_id: str
+) -> None:
     """
     reply user with bus arrival information
     """
@@ -81,9 +83,7 @@ async def bus_stop_code(get_stop_info: GetStopInfo, update: Update, stop_id: str
 
 
 async def bus_route(
-        get_route_stops: GetRouteStops,
-        update: Update,
-        bus_number: str | None
+    get_route_stops: GetRouteStops, update: Update, bus_number: str | None
 ) -> None:
     """
     reply user with bus route information
@@ -103,16 +103,13 @@ async def bus_route(
     reply_msg = bus_route_msg(bus_number, route_info)
 
     # refresh button
-    reply_markup = InlineKeyboardMarkup(
-        make_change_route_btn(bus_number, 2))
+    reply_markup = InlineKeyboardMarkup(make_change_route_btn(bus_number, 2))
 
     await update.message.reply_text(text=reply_msg, reply_markup=reply_markup)
 
 
 async def search(
-        search_possible_stops: SearchPossibleStops,
-        update: Update,
-        query: list[str]
+    search_possible_stops: SearchPossibleStops, update: Update, query: list[str]
 ) -> None:
     if update.message is None:
         return

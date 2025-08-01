@@ -1,6 +1,7 @@
 """
 search for bus stops within a route
 """
+
 from typing import Callable
 
 from custom_typings import BusRoute
@@ -13,12 +14,12 @@ def bus_route_utility(bus_routes: list[BusRoute]) -> GetBusRoute:
     bus_route_map: dict[tuple[str, int], list[str]] = {}
 
     for route in bus_routes:
-        service_number = route['ServiceNo']
-        direction = route['Direction']
+        service_number = route["ServiceNo"]
+        direction = route["Direction"]
         service = (service_number, direction)
         if service not in bus_route_map:
             bus_route_map[service] = []
-        bus_route_map[service].append(route['BusStopCode'])
+        bus_route_map[service].append(route["BusStopCode"])
 
     def get_bus_route(bus_number: str, direction: int) -> list[str] | None:
         """

@@ -10,7 +10,7 @@ from decouple import config
 
 from custom_typings import AllBusStops, BusStop
 
-URL_GET_ALL_STOPS = 'https://datamall2.mytransport.sg/ltaodataservice/BusStops'
+URL_GET_ALL_STOPS = "https://datamall2.mytransport.sg/ltaodataservice/BusStops"
 
 
 def get_stop_hash(stop: BusStop) -> bytes:
@@ -45,13 +45,10 @@ def fetch_stops() -> list[BusStop]:
     skips = 0  # use skips since API can only return 500 results at once
 
     # Build query string
-    headers = {'AccountKey': config('ACCOUNT_KEY')}
+    headers = {"AccountKey": config("ACCOUNT_KEY")}
 
     while True:
-        res = requests.get(
-            f'{URL_GET_ALL_STOPS}?$skip={skips}',
-            headers=headers
-        )
+        res = requests.get(f"{URL_GET_ALL_STOPS}?$skip={skips}", headers=headers)
         json_data = res.json()
         if not json_data["value"]:  # break loop when resulting json is empty
             break
@@ -63,16 +60,13 @@ def fetch_stops() -> list[BusStop]:
 
 def run():
     stops = fetch_stops()
-    all_stops: AllBusStops = {
-        "checksum": bus_stops_checksum(stops),
-        "bus_stops": stops
-    }
+    all_stops: AllBusStops = {"checksum": bus_stops_checksum(stops), "bus_stops": stops}
 
     return all_stops
 
 
 def main():
-    with open('bus_stops.json', 'w') as outfile:
+    with open("bus_stops.json", "w") as outfile:
         json.dump(run(), outfile)
 
 

@@ -11,7 +11,7 @@ type SearchPossibleStops = Callable[[list[str]], list[BusStop]]
 
 
 def nearest_stops_utility(
-        stops: list[BusStop]
+    stops: list[BusStop],
 ) -> tuple[GetNearestStops, GetStopInfo, SearchPossibleStops]:
     """
     TODO description
@@ -19,10 +19,13 @@ def nearest_stops_utility(
     """
     # convert [{"Latitude": 1, "Longitude": 130}] -> [(1, 130)]
     stop_coordinates = tuple(
-        map(lambda stop: (stop["Latitude"], stop["Longitude"]), stops))
+        map(lambda stop: (stop["Latitude"], stop["Longitude"]), stops)
+    )
     kd_tree = KDTree(stop_coordinates)
 
-    def get_nearest_stops(coord: Coordinate, num_stops: Optional[int] = 3) -> list[BusStop]:
+    def get_nearest_stops(
+        coord: Coordinate, num_stops: Optional[int] = 3
+    ) -> list[BusStop]:
         _, nd_indexes = kd_tree.query([coord], k=num_stops)
         # convert numpy 2d array (with only 1 row) to list of integers
         # numpy_ndarray -> [[1, 2, 3]] -> [1, 2, 3]
@@ -33,10 +36,7 @@ def nearest_stops_utility(
         return nearest_stops
 
     # create dictionary with BusStopCode as key and BusStop as value
-    stops_map = dict(zip(
-        map(lambda x: x["BusStopCode"], stops),
-        stops
-    ))
+    stops_map = dict(zip(map(lambda x: x["BusStopCode"], stops), stops))
 
     def get_stop_info(bus_stop_code: str) -> BusStop | None:
         """
@@ -79,8 +79,7 @@ def nearest_stops_utility(
                     stop_ids_set.update(token_map[query_token])
                 else:
                     stop_ids_set = set.intersection(
-                        stop_ids_set,
-                        token_map[query_token]
+                        stop_ids_set, token_map[query_token]
                     )
 
         potential_bus_stops = map(get_stop_info, stop_ids_set)
@@ -88,8 +87,4 @@ def nearest_stops_utility(
         # TODO sort
         return bus_stops
 
-    return (
-        get_nearest_stops,
-        get_stop_info,
-        search_possible_stops
-    )
+    return (get_nearest_stops, get_stop_info, search_possible_stops)

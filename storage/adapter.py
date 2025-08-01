@@ -20,9 +20,12 @@ def storage_utility_h(con: sqlite3.Connection) -> tuple[GetSavedStops, SaveStops
         """
         try:
             cur = con.cursor()
-            res = cur.execute("""
+            res = cur.execute(
+                """
             SELECT bus_stop_codes FROM saved_stops WHERE chat_id = ?;
-            """, (chat_id,))
+            """,
+                (chat_id,),
+            )
             saved_stops_res: tuple[str] | None = res.fetchone()
             if saved_stops_res is None:
                 return []
@@ -41,12 +44,15 @@ def storage_utility_h(con: sqlite3.Connection) -> tuple[GetSavedStops, SaveStops
         saved_stops_str = ",".join(stops)
         try:
             cur = con.cursor()
-            cur.execute("""
+            cur.execute(
+                """
             INSERT INTO saved_stops (chat_id, bus_stop_codes) VALUES (?, ?)
             ON CONFLICT(chat_id)
             DO UPDATE SET
             bus_stop_codes = excluded.bus_stop_codes;
-            """, (chat_id, saved_stops_str))
+            """,
+                (chat_id, saved_stops_str),
+            )
             con.commit()
         except sqlite3.Error as e:
             # TODO handle error

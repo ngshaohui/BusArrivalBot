@@ -13,8 +13,7 @@ from .inline_buttons import make_change_route_btn, make_refresh_button
 
 def route_direction_handler(service_integrator: ServiceIntegrator) -> Callable:
     async def route_direction_handler_button(
-            update: Update,
-            _: ContextTypes.DEFAULT_TYPE
+        update: Update, _: ContextTypes.DEFAULT_TYPE
     ) -> None:
         """
         gives the route for the other direction
@@ -23,7 +22,7 @@ def route_direction_handler(service_integrator: ServiceIntegrator) -> Callable:
         if query is None or query.data is None:
             # ignore malformed requests
             return
-        bus_number, direction_str = query.data.split(',')
+        bus_number, direction_str = query.data.split(",")
 
         # craft message
         route_info = service_integrator.get_route_stops(bus_number, int(direction_str))
@@ -34,7 +33,8 @@ def route_direction_handler(service_integrator: ServiceIntegrator) -> Callable:
 
         # refresh button
         reply_markup = InlineKeyboardMarkup(
-            make_change_route_btn(bus_number, 1 if direction_str == "2" else 2))
+            make_change_route_btn(bus_number, 1 if direction_str == "2" else 2)
+        )
 
         await query.answer()
         try:
@@ -42,6 +42,7 @@ def route_direction_handler(service_integrator: ServiceIntegrator) -> Callable:
         except BadRequest:
             # ignore errors due to same message being sent
             pass
+
     return route_direction_handler_button
 
 
@@ -49,6 +50,7 @@ def bus_number_handler(service_integrator: ServiceIntegrator) -> Callable:
     """
     get button selection callback handler
     """
+
     async def button(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         """Parses the CallbackQuery and updates the message text."""
         query = update.callback_query

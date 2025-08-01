@@ -7,7 +7,9 @@ import requests
 
 from custom_typings import BusArrivalServiceResponse, BusInfo, TimestampISO8601
 
-URL_GET_ARRIVING_BUSSES = 'https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival'
+URL_GET_ARRIVING_BUSSES = (
+    "https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival"
+)
 
 
 class BusInfoCacheItem(NamedTuple):
@@ -33,8 +35,7 @@ def get_arriving_busses(bus_stop_code: str) -> list[BusInfo]:
 
     arriving_busses = fetch_arriving_busses(bus_stop_code)
     # store in cache
-    __bus_info_cache[bus_stop_code] = BusInfoCacheItem(
-        unix_time_now, arriving_busses)
+    __bus_info_cache[bus_stop_code] = BusInfoCacheItem(unix_time_now, arriving_busses)
     return arriving_busses
 
 
@@ -44,16 +45,15 @@ def fetch_arriving_busses(bus_stop_code: str) -> list[BusInfo]:
     TODO add try-except to handle non status 200 responses
     TODO add timeout for responses
     """
-    params = {'BusStopCode': bus_stop_code}
-    headers = {'AccountKey': config('ACCOUNT_KEY')}
+    params = {"BusStopCode": bus_stop_code}
+    headers = {"AccountKey": config("ACCOUNT_KEY")}
     res = requests.get(URL_GET_ARRIVING_BUSSES, headers=headers, params=params)
     json_data: BusArrivalServiceResponse = res.json()
-    return json_data['Services']
+    return json_data["Services"]
 
 
 def get_arrival_time_mins(
-        bus_arrival_time: TimestampISO8601,
-        cur_unix_time: int
+    bus_arrival_time: TimestampISO8601, cur_unix_time: int
 ) -> int:
     """
     TODO describe

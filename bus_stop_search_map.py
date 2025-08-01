@@ -71,7 +71,7 @@ WORDS_MAP = {
     "plant": "plt",
     "aerospace": "a'space",
     "link": "lk",  # Bef Seletar A'Space Lk
-    "temple": "tp"
+    "temple": "tp",
 }
 
 

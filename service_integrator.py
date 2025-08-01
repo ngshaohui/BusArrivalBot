@@ -1,6 +1,7 @@
 """
 composes functions to give enhanced output
 """
+
 from typing import Callable
 
 from custom_typings import BusRoute, BusStop
@@ -29,6 +30,6 @@ class ServiceIntegrator:
     def refresh(self, bus_stops: list[BusStop], bus_routes: list[BusRoute]) -> None:
         """update functions"""
         self.get_bus_route = bus_route_utility(bus_routes)
-        (self.get_nearest_stops,
-         self.get_stop_info,
-         self.search_possible_stops) = nearest_stops_utility(bus_stops)
+        (self.get_nearest_stops, self.get_stop_info, self.search_possible_stops) = (
+            nearest_stops_utility(bus_stops)
+        )
