@@ -94,19 +94,19 @@ BUS_123: list[BusInfo] = [
 class TestBusSearch(unittest.TestCase):
     def test_no_search_results(self):
         msg = bus_stop_search_msg([])
-        expected_str = "0 Bus stops matching the search query\n\n"
+        expected_str = "No bus stops match the search query"
         self.assertEqual(msg, expected_str)
 
     def test_one_search_result(self):
         msg = bus_stop_search_msg(STOPS[:1])
-        expected_str = """1 Bus stop matching the search query
+        expected_str = """Showing 1 out of 1 bus stop matching the search query
 
 /14519 Resorts World Sentosa"""
         self.assertEqual(msg, expected_str)
 
     def test_multiple_search_results(self):
         msg = bus_stop_search_msg(STOPS)
-        expected_str = """6 Bus stops matching the search query
+        expected_str = """Showing 6 out of 6 bus stops matching the search query
 
 /14519 Resorts World Sentosa
 /45029 Opp Heavy Veh Pk
