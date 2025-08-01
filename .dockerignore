@@ -1,0 +1,10 @@
+.DS_Store
+*.db
+__pycache__
+.example
+
+*.json
+
+/temp
+
+test_*.py

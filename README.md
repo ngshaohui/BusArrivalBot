@@ -26,6 +26,13 @@ The dependencies in `pyproject.toml` will be installed automatically
 uv run bot.py
 ```
 
+## Building and running
+
+```bash
+docker build --rm -f Dockerfile -t bus-arrival-bot:0.1.0 .
+docker run --name bus-arrival-bot --rm bus-arrival-bot:0.1.0
+```
+
 ## Milestones
 
 ### Milestone 1 (done)
@@ -50,7 +57,7 @@ uv run bot.py
 
 ### Milestone 5
 
-- [ ] Dockerfile
+- [x] Dockerfile
 - [ ] autopep8 and pylint configuration
 
 ### Milestone 6
@@ -60,10 +67,11 @@ uv run bot.py
 
 ### Chores
 
-- [ ] Handle data leak from cache implementation
+- [ ] Handle memory leak from cache implementation
 - [ ] Handle request timeouts and error codes from LTA Datamall
 - [ ] Fix comments
 - [ ] Typecheck
+- [ ] Optimize Dockerfile (currently 479.68 MB)
 
 ## Inconsistency of result displays
 
