@@ -3,6 +3,7 @@ from typing import Callable
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from decouple import config
+import sqlite3
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
     Application,
@@ -15,12 +16,18 @@ from telegram.ext import (
 
 from custom_typings import AllBusRoutes, AllBusStops, BusRoute, BusStop
 from reply_handlers.callback_query_handler import (
-    bus_number_handler,
+    bus_stop_handler,
     route_direction_handler,
+)
+from reply_handlers.settings_handler import (
+    register_settings_handlers,
+    show_settings_handler,
 )
 from reply_handlers.text_reply_handler import message_handler
 from scripts import fetch_routes, fetch_stops
 from service_integrator import ServiceIntegrator
+from storage.adapter import StorageUtility
+from storage.initialize import init
 
 # Enable logging
 logging.basicConfig(
@@ -86,11 +93,34 @@ def location_handler(service_integrator: ServiceIntegrator) -> Callable:
 
 def fetch_stops_and_routes() -> tuple[list[BusStop], list[BusRoute]]:
     """Fetches bus stops and routes data."""
-    all_stops: AllBusStops = fetch_stops.run()
-    bus_stops = all_stops["bus_stops"]
-    all_routes: AllBusRoutes = fetch_routes.run()
-    bus_routes = all_routes["bus_routes"]
-    return bus_stops, bus_routes
+    # all_stops: AllBusStops = fetch_stops.run()
+    # bus_stops = all_stops["bus_stops"]
+    # all_routes: AllBusRoutes = fetch_routes.run()
+    # bus_routes = all_routes["bus_routes"]
+    # return bus_stops, bus_routes
+    return [
+        {
+            "BusStopCode": "01012",
+            "RoadName": "Victoria St",
+            "Description": "Hotel Grand Pacific",
+            "Latitude": 1.29684825487647,
+            "Longitude": 103.85253591654006,
+        },
+        {
+            "BusStopCode": "01013",
+            "RoadName": "Victoria St",
+            "Description": "St. Joseph's Ch",
+            "Latitude": 1.29770970610083,
+            "Longitude": 103.8532247463225,
+        },
+        {
+            "BusStopCode": "01019",
+            "RoadName": "Victoria St",
+            "Description": "Bras Basah Cplx",
+            "Latitude": 1.29698951191332,
+            "Longitude": 103.85302201172507,
+        },
+    ], []
 
 
 def refresh_service_integrator(service_integrator: ServiceIntegrator):
@@ -106,6 +136,11 @@ def main() -> None:
     """Start the bot."""
     # Init application state
     service_integrator = ServiceIntegrator(*fetch_stops_and_routes())
+    con = sqlite3.connect("file::memory:", uri=True)
+    init(con)
+    storage_utility = StorageUtility(con)
+
+    # Fetch new data once a week on Sundays
     scheduler = BackgroundScheduler()
     scheduler.add_job(
         refresh_service_integrator(service_integrator),
@@ -122,22 +157,29 @@ def main() -> None:
     # on different commands
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", start))
+    application.add_handler(
+        CommandHandler("settings", show_settings_handler(storage_utility))
+    )
 
     # on non command i.e message
     application.add_handler(
-        MessageHandler(filters.TEXT, message_handler(service_integrator))
+        MessageHandler(
+            filters.TEXT, message_handler(service_integrator, storage_utility)
+        )
     )
     application.add_handler(
         MessageHandler(filters.LOCATION, location_handler(service_integrator))
     )
     application.add_handler(
-        CallbackQueryHandler(bus_number_handler(service_integrator), pattern=r"\d{5}")
+        CallbackQueryHandler(bus_stop_handler(service_integrator), pattern=r"\d{5}")
     )
     application.add_handler(
         CallbackQueryHandler(
             route_direction_handler(service_integrator), pattern=r"\d{1,3}\w?\,[12]"
         )
     )
+    # settings
+    register_settings_handlers(application, service_integrator, storage_utility)
 
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)

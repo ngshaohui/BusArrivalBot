@@ -8,6 +8,7 @@ from telegram.ext import ContextTypes
 from bus_stops import GetStopInfo, SearchPossibleStops
 from format_message import bus_route_msg, bus_stop_search_msg, next_bus_msg
 from service_integrator import GetRouteStops, ServiceIntegrator
+from storage.adapter import StorageUtility
 from .inline_buttons import make_change_route_btn, make_refresh_button
 from bus_arrival import get_arriving_busses
 
@@ -24,11 +25,16 @@ REGEX_ROUTE = r"\/?route\s*(\d{1,3}[A-Za-z]?)?"
 # search opp heavy
 # /search pei
 REGEX_SEARCH = r"\/?search\s*(.*)"
-# TODO handle searches without starting with /
-# first character cannot be /
+# add 34120
+# /add 29125
+# add_34343
+# /add_12345
+REGEX_ADD_STOP = r"\/?add[?:\s*|_](\d{5})"
 
 
-def message_handler(service_integrator: ServiceIntegrator) -> Callable:
+def message_handler(
+    service_integrator: ServiceIntegrator, storage_utility: StorageUtility
+) -> Callable:
     async def reply(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         """
         parse all text that the user sends
@@ -52,6 +58,11 @@ def message_handler(service_integrator: ServiceIntegrator) -> Callable:
             query_str = match.group(1)
             query: list[str] = re.split(r"\s", query_str)
             await search(service_integrator.search_possible_stops, update, query)
+        elif match := re.match(REGEX_ADD_STOP, msg, re.IGNORECASE):
+            stop_code = match.group(1)
+            await add_stop(
+                storage_utility, service_integrator.get_stop_info, update, stop_code
+            )
         else:
             # unknown command message
             await unknown_command(update)
@@ -125,4 +136,25 @@ async def unknown_command(update: Update) -> None:
     """
     if update.message is None:
         return
-    await update.message.reply_text("unknown command")
+    await update.message.reply_text("Unknown command")
+
+
+async def add_stop(
+    storage_utility: StorageUtility,
+    get_stop_info: GetStopInfo,
+    update: Update,
+    stop_id: str,
+) -> None:
+    if update.message is None:
+        return
+
+    stop_info = get_stop_info(stop_id)
+    if stop_info is None:
+        await update.message.reply_text("Unknown bus stop code")
+        return
+
+    storage_utility.add_stop(update.message.chat_id, stop_id)
+    # TODO use message formatter
+    await update.message.reply_text(
+        f"Added bus stop {stop_info['BusStopCode']} {stop_info['Description']}"
+    )

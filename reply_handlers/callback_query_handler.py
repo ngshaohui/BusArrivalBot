@@ -46,7 +46,7 @@ def route_direction_handler(service_integrator: ServiceIntegrator) -> Callable:
     return route_direction_handler_button
 
 
-def bus_number_handler(service_integrator: ServiceIntegrator) -> Callable:
+def bus_stop_handler(service_integrator: ServiceIntegrator) -> Callable:
     """
     get button selection callback handler
     """
