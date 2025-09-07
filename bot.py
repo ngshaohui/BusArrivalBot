@@ -4,7 +4,7 @@ from typing import Callable
 from apscheduler.schedulers.background import BackgroundScheduler
 from decouple import config
 import sqlite3
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardMarkup, Update
 from telegram.ext import (
     Application,
     CallbackQueryHandler,
@@ -19,6 +19,7 @@ from reply_handlers.callback_query_handler import (
     bus_stop_handler,
     route_direction_handler,
 )
+from reply_handlers.inline_buttons import get_stop_inline_button
 from reply_handlers.settings_handler import (
     register_settings_handlers,
     show_settings_handler,
@@ -61,14 +62,6 @@ def location_handler(service_integrator: ServiceIntegrator) -> Callable:
     send prompt for users to select nearest bus stop (out of 3 candidates)
     """
 
-    def get_stop_inline_button(bus_stop: BusStop) -> list[InlineKeyboardButton]:
-        return [
-            InlineKeyboardButton(
-                f"{bus_stop['BusStopCode']} | {bus_stop['Description']}",
-                callback_data=bus_stop["BusStopCode"],
-            )
-        ]
-
     async def location(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         # workaround: pylint error suppression
         if update.message is None or update.message.location is None:
@@ -93,34 +86,11 @@ def location_handler(service_integrator: ServiceIntegrator) -> Callable:
 
 def fetch_stops_and_routes() -> tuple[list[BusStop], list[BusRoute]]:
     """Fetches bus stops and routes data."""
-    # all_stops: AllBusStops = fetch_stops.run()
-    # bus_stops = all_stops["bus_stops"]
-    # all_routes: AllBusRoutes = fetch_routes.run()
-    # bus_routes = all_routes["bus_routes"]
-    # return bus_stops, bus_routes
-    return [
-        {
-            "BusStopCode": "01012",
-            "RoadName": "Victoria St",
-            "Description": "Hotel Grand Pacific",
-            "Latitude": 1.29684825487647,
-            "Longitude": 103.85253591654006,
-        },
-        {
-            "BusStopCode": "01013",
-            "RoadName": "Victoria St",
-            "Description": "St. Joseph's Ch",
-            "Latitude": 1.29770970610083,
-            "Longitude": 103.8532247463225,
-        },
-        {
-            "BusStopCode": "01019",
-            "RoadName": "Victoria St",
-            "Description": "Bras Basah Cplx",
-            "Latitude": 1.29698951191332,
-            "Longitude": 103.85302201172507,
-        },
-    ], []
+    all_stops: AllBusStops = fetch_stops.run()
+    bus_stops = all_stops["bus_stops"]
+    all_routes: AllBusRoutes = fetch_routes.run()
+    bus_routes = all_routes["bus_routes"]
+    return bus_stops, bus_routes
 
 
 def refresh_service_integrator(service_integrator: ServiceIntegrator):

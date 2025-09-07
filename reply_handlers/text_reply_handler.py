@@ -8,6 +8,7 @@ from telegram.ext import ContextTypes
 from bus_stops import GetStopInfo, SearchPossibleStops
 from format_message import bus_route_msg, bus_stop_search_msg, next_bus_msg
 from reply_handlers.settings_handler import add_stop
+from saved_stops import list_saved_stops
 from service_integrator import GetRouteStops, ServiceIntegrator
 from storage.adapter import StorageUtility
 from .inline_buttons import make_change_route_btn, make_refresh_button
@@ -31,6 +32,9 @@ REGEX_SEARCH = r"\/?search\s*(.*)"
 # add_34343
 # /add_12345
 REGEX_ADD_STOP = r"\/?add[?:\s*|_](\d{5})"
+# list
+# /list
+REGEX_LIST_SAVED_STOPS = r"\/?list"
 
 
 def message_handler(
@@ -63,6 +67,10 @@ def message_handler(
             stop_code = match.group(1)
             await add_stop(
                 storage_utility, service_integrator.get_stop_info, update, stop_code
+            )
+        elif re.match(REGEX_LIST_SAVED_STOPS, msg, re.IGNORECASE) is not None:
+            await list_saved_stops(
+                storage_utility, service_integrator.get_stop_info, update
             )
         else:
             # unknown command message

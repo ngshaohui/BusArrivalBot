@@ -62,7 +62,7 @@ docker run --name bus-arrival-bot --rm bus-arrival-bot:0.1.0
 
 ### Milestone 6
 
-- [ ] Save stops as favourites
+- [x] Save stops as favourites
 - [ ] Handle memory leak from cache implementation
 
 ### Chores
