@@ -7,6 +7,7 @@ from telegram.ext import ContextTypes
 
 from bus_stops import GetStopInfo, SearchPossibleStops
 from format_message import bus_route_msg, bus_stop_search_msg, next_bus_msg
+from reply_handlers.settings_handler import add_stop
 from service_integrator import GetRouteStops, ServiceIntegrator
 from storage.adapter import StorageUtility
 from .inline_buttons import make_change_route_btn, make_refresh_button
@@ -137,24 +138,3 @@ async def unknown_command(update: Update) -> None:
     if update.message is None:
         return
     await update.message.reply_text("Unknown command")
-
-
-async def add_stop(
-    storage_utility: StorageUtility,
-    get_stop_info: GetStopInfo,
-    update: Update,
-    stop_id: str,
-) -> None:
-    if update.message is None:
-        return
-
-    stop_info = get_stop_info(stop_id)
-    if stop_info is None:
-        await update.message.reply_text("Unknown bus stop code")
-        return
-
-    storage_utility.add_stop(update.message.chat_id, stop_id)
-    # TODO use message formatter
-    await update.message.reply_text(
-        f"Added bus stop {stop_info['BusStopCode']} {stop_info['Description']}"
-    )

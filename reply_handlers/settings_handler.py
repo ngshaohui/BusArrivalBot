@@ -45,6 +45,18 @@ BACK_TO_SETTINGS_BUTTON = [
 ]
 
 
+def get_chat_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int | None:
+    """
+    get chat id from message/update context
+    TODO: move to a utility file
+    """
+    if update.message is not None:
+        return update.message.chat_id
+    elif context._chat_id is not None:
+        return context._chat_id
+    return None
+
+
 def settings_consent_handler(storage_utility: StorageUtility) -> Callable:
     """
     handle settings consent
@@ -53,20 +65,12 @@ def settings_consent_handler(storage_utility: StorageUtility) -> Callable:
     async def settings_consent(
         update: Update, context: ContextTypes.DEFAULT_TYPE
     ) -> None:
-        query = update.callback_query
-        chat_id = context._chat_id
-        if query is None or query.data is None or chat_id is None:
+        chat_id = get_chat_id(update, context)
+        if not chat_id:
             return  # ignore malformed requests
-        # save user consent in storage
         storage_utility.save_stops(chat_id, [])
-        reply_msg = "Choose an option from the list below:"
-        reply_markup = InlineKeyboardMarkup(SETTINGS_BUTTONS)
-
-        await query.answer()
-        try:
-            await query.edit_message_text(text=reply_msg, reply_markup=reply_markup)
-        except BadRequest:
-            pass  # ignore errors due to same message being sent
+        settings_handler = show_settings_handler(storage_utility)
+        await settings_handler(update, context)
 
     return settings_consent
 
@@ -114,7 +118,6 @@ def revoke_consent_handler(storage_utility: StorageUtility) -> Callable:
             return
         storage_utility.remove_user(chat_id)
 
-        # TODO test reset keyboard
         reply_msg = "Consent revoked."
         await query.answer()
         try:
@@ -126,13 +129,48 @@ def revoke_consent_handler(storage_utility: StorageUtility) -> Callable:
     return settings_consent_revoke
 
 
-def show_settings_handler(_: StorageUtility) -> Callable:
-    async def show_settings(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+async def __show_info(update: Update) -> None:
+    """
+    Show message to user indicating that they need to visit /settings to consent first
+    """
+    text = "User configuration settings not found. Visit /settings to enable storage first."
+    if update.message is not None:
+        await update.message.reply_text(text=text)
+    elif update.callback_query is not None:
+        await update.callback_query.answer()
+        await update.callback_query.edit_message_text(text=text)
+
+
+async def ask_consent(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """
+    ask user for consent to save settings
+    """
+    text = "Allow the bot to store your settings?"
+    reply_markup = InlineKeyboardMarkup(SETTINGS_CONSENT_BUTTONS)
+    if update.message is not None:
+        await update.message.reply_text(text=text, reply_markup=reply_markup)
+    elif update.callback_query is not None:
+        await update.callback_query.answer()
+        await update.callback_query.edit_message_text(
+            text=text, reply_markup=reply_markup
+        )
+    return
+
+
+def show_settings_handler(storage_utility: StorageUtility) -> Callable:
+    async def show_settings(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """
         TODO handle scenario where stops exist or don't exist already
         TODO have the user agree to store settings first, can check if exists in db
         TODO revoke consent
         """
+        chat_id = get_chat_id(update, context)
+        if chat_id is None:
+            return  # ignore malformed requests
+        user_exists = storage_utility.check_user_exists(chat_id)
+        if not user_exists:
+            return await ask_consent(update, context)  # TODO
+
         text = "Choose an option:"
         reply_markup = InlineKeyboardMarkup(SETTINGS_BUTTONS)
         if update.message is not None:
@@ -142,17 +180,33 @@ def show_settings_handler(_: StorageUtility) -> Callable:
             await update.callback_query.edit_message_text(
                 text=text, reply_markup=reply_markup
             )
-        # user_exists = storage_utility.check_user_exists(update.message.chat_id)
-        # if not user_exists:
-        #     # user does not exist, ask for consent
-        #     reply_markup = InlineKeyboardMarkup(SETTINGS_CONSENT_BUTTONS)
-        #     await update.message.reply_text(
-        #         text="Allow the bot to store your settings?",
-        #         reply_markup=reply_markup,
-        #     )
-        #     return
 
     return show_settings
+
+
+async def add_stop(
+    storage_utility: StorageUtility,
+    get_stop_info: GetStopInfo,
+    update: Update,
+    stop_id: str,
+) -> None:
+    if update.message is None:
+        return
+
+    user_exists = storage_utility.check_user_exists(update.message.chat_id)
+    if not user_exists:
+        return await __show_info(update)
+
+    stop_info = get_stop_info(stop_id)
+    if stop_info is None:
+        await update.message.reply_text("Unknown bus stop code")
+        return
+
+    storage_utility.add_stop(update.message.chat_id, stop_id)
+    # TODO use message formatter
+    await update.message.reply_text(
+        f"Added bus stop {stop_info['BusStopCode']} {stop_info['Description']}"
+    )
 
 
 def __make_saved_stops_removal_list(
@@ -181,12 +235,15 @@ def remove_flow_handler(
         TODO handle scenario where stops exist or don't exist already
         """
         query = update.callback_query
-        chat_id = context._chat_id
+        chat_id = get_chat_id(update, context)
         if query is None or query.data is None or chat_id is None:
             # ignore malformed requests
             return
-        # TODO: handle user does not exist
-        # user_exists = storage_utility.check_user_exists(update.message.chat_id)
+
+        user_exists = storage_utility.check_user_exists(chat_id)
+        if not user_exists:
+            return await __show_info(update)
+
         saved_stops = storage_utility.get_saved_stops(chat_id)
         if len(saved_stops) > 0:
             text = "Remove a stop from the list below:"
@@ -211,10 +268,14 @@ def remove_handler(
         """
         query = update.callback_query
         chat_id = context._chat_id
-        # TODO: check if should even be using update.message here
         if query is None or query.data is None or chat_id is None:
             # ignore malformed requests
             return
+
+        user_exists = storage_utility.check_user_exists(chat_id)
+        if not user_exists:
+            return await __show_info(update)
+
         stop_id = query.data.split(",")[1]
         storage_utility.remove_stop(chat_id, stop_id)
 
