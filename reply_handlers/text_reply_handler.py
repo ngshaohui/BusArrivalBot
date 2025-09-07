@@ -20,7 +20,7 @@ from bus_arrival import get_arriving_busses
 REGEX_STOP_CODE = r"\/?(\d{5})"
 # 67
 # /961M
-REGEX_BUS_NUM = r"\/?(\d{1,3}[A-Za-z]?)"
+REGEX_BUS_NUM = r"^\/?(\d{1,3}[A-Za-z]?)$"
 # route 2
 # /route 307E
 REGEX_ROUTE = r"\/?route\s*(\d{1,3}[A-Za-z]?)?"

@@ -65,19 +65,16 @@ docker run --name bus-arrival-bot --rm bus-arrival-bot:0.1.0
 - [x] Save stops as favourites
 - [ ] Handle memory leak from cache implementation
 
-### Chores
+### Work
 
-- [ ] Update help command
-- [ ] Handle request timeouts and error codes from LTA Datamall
-- [ ] Fix comments
-- [ ] Typecheck
-- [ ] Optimize Dockerfile (currently 479.68 MB)
-- [ ] Reduce repeated code for bus route directions
-- [ ] [Bug] `1101` gets parsed as a bus number `110`
-
-### Ideas
-
-- [ ] Compare common stops
+- [ ] [Chore] Update help command
+- [ ] [Chore] Handle request timeouts and error codes from LTA Datamall
+- [ ] [Chore] Fix comments
+- [ ] [Chore] Typecheck
+- [ ] [Chore] Reduce repeated code for bus route directions
+- [ ] [Feature] Paginate search query
+- [ ] [Optimization] Reduce size of Dockerfile (currently 479.68 MB)
+- [ ] [Feature] Compare common stops
 
 ## Inconsistency of result displays
 
