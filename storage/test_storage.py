@@ -2,17 +2,13 @@
 https://www.sqlite.org/inmemorydb.html
 """
 
-import sqlite3
 import unittest
 from .adapter import StorageUtility
-from .initialize import init
 
 
 class TestStorage(unittest.TestCase):
     def setUp(self):
-        con = sqlite3.connect("file::memory:", uri=True)
-        init(con)
-        self.storage_utility = StorageUtility(con)
+        self.storage_utility = StorageUtility(in_memory=True)
 
     def test_save_0_stops(self):
         """

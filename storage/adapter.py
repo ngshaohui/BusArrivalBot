@@ -1,17 +1,25 @@
 import sqlite3
-from typing import Callable
 
-type GetSavedStops = Callable[[int], list[str]]
-type SaveStops = Callable[[int, list[str]], bool]
+from storage.initialize import init
 
 
 # TODO use constant for table name
 class StorageUtility:
-    def __init__(self, con: sqlite3.Connection | None = None):
-        if con is None:
+    def __init__(
+        self, in_memory: bool | None = None, con: sqlite3.Connection | None = None
+    ):
+        # TODO: use logging to indicate where the DB is being loaded from
+        if in_memory is not None:
+            print("serving from mem")
+            self.con = sqlite3.connect("file::memory:", uri=True)
+            init(self.con)
+        elif con is None:
+            print("serving from bus_arrival_bot.db")
             self.con = sqlite3.connect("bus_arrival_bot.db")
         else:
             self.con = con
+        if not has_init_tables(self.con):
+            raise Exception("Database has not been initialized")
 
     def check_user_exists(self, chat_id: int) -> bool:
         """
@@ -120,3 +128,18 @@ class StorageUtility:
             return False
         finally:
             return True
+
+
+def has_init_tables(conn: sqlite3.Connection) -> bool:
+    """
+    Return True if the database contains any user-created tables,
+    ignoring SQLite internal tables.
+    """
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT name 
+        FROM sqlite_master 
+        WHERE type='table'
+          AND name NOT LIKE 'sqlite_%';
+    """)
+    return cursor.fetchone() is not None

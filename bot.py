@@ -3,7 +3,6 @@ from typing import Callable
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from decouple import config
-import sqlite3
 from telegram import InlineKeyboardMarkup, Update
 from telegram.ext import (
     Application,
@@ -28,7 +27,6 @@ from reply_handlers.text_reply_handler import message_handler
 from scripts import fetch_routes, fetch_stops
 from service_integrator import ServiceIntegrator
 from storage.adapter import StorageUtility
-from storage.initialize import init
 
 # Enable logging
 logging.basicConfig(
@@ -106,9 +104,7 @@ def main() -> None:
     """Start the bot."""
     # Init application state
     service_integrator = ServiceIntegrator(*fetch_stops_and_routes())
-    con = sqlite3.connect("file::memory:", uri=True)
-    init(con)
-    storage_utility = StorageUtility(con)
+    storage_utility = StorageUtility()
 
     # Fetch new data once a week on Sundays
     scheduler = BackgroundScheduler()
