@@ -3,7 +3,7 @@
 
 # Install uv
 FROM python:3.13-slim AS builder
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/
 
 # Change the working directory to the `app` directory
 WORKDIR /app
@@ -12,14 +12,14 @@ WORKDIR /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --locked --no-install-project --no-editable
+    uv sync --no-dev --locked --no-editable
 
 # Copy the project into the intermediate image
 ADD . /app
 
 # Sync the project
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-editable
+    uv sync --no-dev --locked --no-editable
 
 FROM python:3.13-slim
 
