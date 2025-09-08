@@ -45,7 +45,7 @@ class StorageUtility:
                 (chat_id,),
             )
             saved_stops_res: tuple[str] | None = res.fetchone()
-            if saved_stops_res is None:
+            if saved_stops_res is None or saved_stops_res[0] == "":
                 return []
             saved_stops = saved_stops_res[0].split(",")
             return saved_stops

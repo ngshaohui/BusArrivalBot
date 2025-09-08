@@ -14,6 +14,14 @@ class TestStorage(unittest.TestCase):
         init(con)
         self.storage_utility = StorageUtility(con)
 
+    def test_save_0_stops(self):
+        """
+        add 0 stops
+        """
+        self.storage_utility.save_stops(123456, [])
+        stops = self.storage_utility.get_saved_stops(123456)
+        self.assertEqual(stops, [])
+
     def test_save_1_stop(self):
         """
         add 1 stop
@@ -46,6 +54,14 @@ class TestStorage(unittest.TestCase):
         self.storage_utility.save_stops(123456, [])
         self.assertTrue(self.storage_utility.check_user_exists(123456))
         self.assertFalse(self.storage_utility.check_user_exists(999111))
+
+    def test_add_and_retrieve_stop(self):
+        """
+        add one stop to a list of empty stops and retrieve it
+        """
+        self.storage_utility.add_stop(123456, "42012")
+        stops = self.storage_utility.get_saved_stops(123456)
+        self.assertEqual(stops, ["42012"])
 
 
 if __name__ == "__main__":
