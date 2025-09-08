@@ -112,7 +112,7 @@ def revoke_consent_handler(storage_utility: StorageUtility) -> Callable:
             return
         storage_utility.remove_user(chat_id)
 
-        reply_msg = "User data will not be stored."
+        reply_msg = "User configuration settings will not be stored."
         await query.answer()
         try:
             await query.edit_message_text(text=reply_msg)
@@ -139,9 +139,9 @@ async def ask_consent(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     """
     ask user for consent to save settings
     """
-    text = """No existing user data found.
+    text = """No existing user configuration settings found.
 
-Allow the bot to store your configuration settings?"""
+Allow the bot to store your settings data?"""
     reply_markup = InlineKeyboardMarkup(SETTINGS_CONSENT_KEYBOARD)
     if update.message is not None:
         await update.message.reply_text(text=text, reply_markup=reply_markup)
@@ -301,7 +301,7 @@ def reorder_flow_handler(
             return await __show_info(update)
 
         saved_stops = storage_utility.get_saved_stops(chat_id)
-        text = "Select a stop from the list below:"
+        text = "Select a stop to reorder from the list below:"
         callback_buttons = __make_saved_stops_list(
             get_stop_info, saved_stops, SETTINGS_ACTIONS.REORDER_SELECT
         ) + [BACK_TO_SETTINGS_BUTTON]
@@ -343,13 +343,13 @@ def __get_reorder_list_message(
     Uses 1 based indexing
     """
     msg = ""
-    # stop_info_ls = [info for stop in saved_stops if (info := get_stop_info(stop)) is not None]
     stop_info_iter = map(get_stop_info, saved_stops)
     for idx, stop_info in enumerate(stop_info_iter):
         if stop_info is not None:
-            idx_marker = f"> {idx + 1}." if idx == selected_pos else f"{idx + 1} ."
-            msg += f"{idx_marker} {stop_info['BusStopCode']} | {stop_info['Description']}\n"
-    return msg.strip()
+            marker = "🔴 " if idx == selected_pos else ""
+            msg += f"{marker}{idx + 1}. {stop_info['BusStopCode']} | {stop_info['Description']}\n"
+    msg += "\n🔴 Currently selected stop"
+    return msg
 
 
 def reorder_select_handler(
@@ -384,6 +384,9 @@ def reorder_select_handler(
             text = "Data for this message is outdated. Please use /settings for the latest data."
             await query.answer()
             await query.edit_message_text(text)
+
+        except BadRequest:
+            pass  # ignore errors due to same message being sent
 
     return reorder_select
 
@@ -431,8 +434,6 @@ def reorder_handler(
             return
         new_stops_order = __reorder_stops_list(saved_stops, int(position), direction)
         storage_utility.save_stops(chat_id, new_stops_order)
-
-        # TODO implement flow for finish reorder
 
         reorder_select = reorder_select_handler(storage_utility, get_stop_info)
         await reorder_select(update, context)
