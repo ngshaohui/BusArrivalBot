@@ -8,36 +8,7 @@ from bus_stops import GetStopInfo
 from constants import SETTINGS_ACTIONS
 from service_integrator import ServiceIntegrator
 from storage.adapter import StorageUtility
-
-
-def __make_settings_buttons() -> list[list[InlineKeyboardButton]]:
-    """ """
-    remove_button = InlineKeyboardButton(
-        "Remove stops", callback_data=SETTINGS_ACTIONS.REMOVE_FLOW.value
-    )
-    # reorder_button = InlineKeyboardButton(
-    #     "Reorder", callback_data=SETTINGS_ACTIONS.REORDER.value
-    # )
-    return [[remove_button]]
-
-
-SETTINGS_BUTTONS = __make_settings_buttons()
-
-
-def __make_settings_consent_buttons() -> list[list[InlineKeyboardButton]]:
-    """
-    buttons to ask for consent to store data
-    """
-    consent_button = InlineKeyboardButton(
-        "Consent", callback_data=SETTINGS_ACTIONS.CONSENT.value
-    )
-    decline_button = InlineKeyboardButton(
-        "Decline", callback_data=SETTINGS_ACTIONS.DECLINE.value
-    )
-    return [[consent_button, decline_button]]
-
-
-SETTINGS_CONSENT_BUTTONS = __make_settings_consent_buttons()
+from utils import get_chat_id
 
 
 BACK_TO_SETTINGS_BUTTON = [
@@ -45,16 +16,39 @@ BACK_TO_SETTINGS_BUTTON = [
 ]
 
 
-def get_chat_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int | None:
-    """
-    get chat id from message/update context
-    TODO: move to a utility file
-    """
-    if update.message is not None:
-        return update.message.chat_id
-    elif context._chat_id is not None:
-        return context._chat_id
-    return None
+SETTINGS_KEYBOARD = [
+    [
+        InlineKeyboardButton(
+            "Remove stops", callback_data=SETTINGS_ACTIONS.REMOVE_FLOW.value
+        )
+    ],
+    # [
+    #     InlineKeyboardButton(
+    #         "Reorder stops", callback_data=SETTINGS_ACTIONS.REORDER.value
+    #     )
+    # ],
+    [
+        InlineKeyboardButton(
+            "Revoke permissions", callback_data=SETTINGS_ACTIONS.DECLINE_FLOW.value
+        )
+    ],
+]
+
+
+SETTINGS_CONSENT_KEYBOARD = [
+    [
+        InlineKeyboardButton("Allow", callback_data=SETTINGS_ACTIONS.CONSENT.value),
+        InlineKeyboardButton("Decline", callback_data=SETTINGS_ACTIONS.DECLINE.value),
+    ]
+]
+
+
+SETTINGS_REVOKE_CONSENT_KEYBOARD = [
+    [
+        InlineKeyboardButton("Confirm", callback_data=SETTINGS_ACTIONS.DECLINE.value),
+        InlineKeyboardButton("Cancel", callback_data=SETTINGS_ACTIONS.SHOW.value),
+    ]
+]
 
 
 def settings_consent_handler(storage_utility: StorageUtility) -> Callable:
@@ -88,11 +82,11 @@ def revoke_consent_confirmation_handler() -> Callable:
             return  # ignore malformed requests
 
         # confirm revocation of consent
-        reply_msg = """Are you sure you want to revoke consent?
+        reply_msg = """Are you sure you want to revoke data storage consent?
 This will delete your saved stops.
 
 This action is irreversible."""
-        reply_markup = InlineKeyboardMarkup(SETTINGS_CONSENT_BUTTONS)
+        reply_markup = InlineKeyboardMarkup(SETTINGS_REVOKE_CONSENT_KEYBOARD)
 
         await query.answer()
         try:
@@ -118,7 +112,7 @@ def revoke_consent_handler(storage_utility: StorageUtility) -> Callable:
             return
         storage_utility.remove_user(chat_id)
 
-        reply_msg = "Consent revoked."
+        reply_msg = "User data will not be stored."
         await query.answer()
         try:
             await query.edit_message_text(text=reply_msg)
@@ -145,8 +139,10 @@ async def ask_consent(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     """
     ask user for consent to save settings
     """
-    text = "Allow the bot to store your settings?"
-    reply_markup = InlineKeyboardMarkup(SETTINGS_CONSENT_BUTTONS)
+    text = """No user data found.
+
+Allow the bot to store your configuration settings?"""
+    reply_markup = InlineKeyboardMarkup(SETTINGS_CONSENT_KEYBOARD)
     if update.message is not None:
         await update.message.reply_text(text=text, reply_markup=reply_markup)
     elif update.callback_query is not None:
@@ -169,10 +165,10 @@ def show_settings_handler(storage_utility: StorageUtility) -> Callable:
             return  # ignore malformed requests
         user_exists = storage_utility.check_user_exists(chat_id)
         if not user_exists:
-            return await ask_consent(update, context)  # TODO
+            return await ask_consent(update, context)
 
-        text = "Choose an option:"
-        reply_markup = InlineKeyboardMarkup(SETTINGS_BUTTONS)
+        text = "Choose an option from the list below:"
+        reply_markup = InlineKeyboardMarkup(SETTINGS_KEYBOARD)
         if update.message is not None:
             await update.message.reply_text(text=text, reply_markup=reply_markup)
         elif update.callback_query is not None:
@@ -199,13 +195,14 @@ async def add_stop(
 
     stop_info = get_stop_info(stop_id)
     if stop_info is None:
-        await update.message.reply_text("Unknown bus stop code")
+        await update.message.reply_text("Unable to save unknown bus stop code")
         return
 
     storage_utility.add_stop(update.message.chat_id, stop_id)
     # TODO use message formatter
     await update.message.reply_text(
-        f"Added bus stop {stop_info['BusStopCode']} {stop_info['Description']}"
+        f"""Saved bus stop
+{stop_info["BusStopCode"]} | {stop_info["Description"]}"""
     )
 
 
@@ -215,12 +212,12 @@ def __make_saved_stops_removal_list(
     """
     TODO describe
     """
-    buttons = []
+    buttons: list[list[InlineKeyboardButton]] = []
     for stop in saved_stops:
         stop_info = get_stop_info(stop)
         if stop_info is not None:
             button = InlineKeyboardButton(
-                f"{stop_info['BusStopCode']} {stop_info['Description']}",
+                f"{stop_info['BusStopCode']} | {stop_info['Description']}",
                 callback_data=f"{SETTINGS_ACTIONS.REMOVE.value},{stop_info['BusStopCode']}",
             )
             buttons.append([button])
@@ -308,7 +305,7 @@ def register_settings_handlers(
     application.add_handler(
         CallbackQueryHandler(
             revoke_consent_confirmation_handler(),
-            pattern=SETTINGS_ACTIONS.DECLINE_CONFIRM.value,
+            pattern=SETTINGS_ACTIONS.DECLINE_FLOW.value,
         )
     )
     application.add_handler(
