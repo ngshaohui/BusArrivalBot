@@ -1,41 +1,23 @@
 from datetime import datetime
-import time
-from typing import NamedTuple
 
 from decouple import config
 import requests
 
 from custom_typings import BusArrivalServiceResponse, BusInfo, TimestampISO8601
+from lru_cache import LRUCache
 
 URL_GET_ARRIVING_BUSSES = (
     "https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival"
 )
 
-
-class BusInfoCacheItem(NamedTuple):
-    retrieved: int
-    busses: list[BusInfo]
-
-
-# custom cache implementation
-CACHE_EXPIRY = 20  # seconds
-type CacheLayer = dict[str, BusInfoCacheItem]
-__bus_info_cache: CacheLayer = {}
+__bus_info_cache = LRUCache[list[BusInfo]](ttl=20, item_limit=100)
 
 
 def get_arriving_busses(bus_stop_code: str) -> list[BusInfo]:
-    unix_time_now = int(time.time())
-
-    # cache hit
-    if bus_stop_code in __bus_info_cache:
-        cached_result = __bus_info_cache[bus_stop_code]
-        # check if time is valid
-        if unix_time_now - cached_result.retrieved < CACHE_EXPIRY:
-            return cached_result.busses
-
-    arriving_busses = fetch_arriving_busses(bus_stop_code)
-    # store in cache
-    __bus_info_cache[bus_stop_code] = BusInfoCacheItem(unix_time_now, arriving_busses)
+    arriving_busses = __bus_info_cache.get(bus_stop_code)
+    if arriving_busses is None:
+        arriving_busses = fetch_arriving_busses(bus_stop_code)
+        __bus_info_cache.set(bus_stop_code, arriving_busses)
     return arriving_busses
 
 
