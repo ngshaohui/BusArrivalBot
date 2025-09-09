@@ -43,4 +43,3 @@ def populate_dummy():
 
 if __name__ == "__main__":
     main()
-    populate_dummy()

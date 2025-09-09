@@ -29,4 +29,7 @@ COPY --from=builder --chown=app:app /app/ /app/
 ENV PATH="/app/.venv/bin:$PATH"
 ENV VIRTUAL_ENV="/app/.venv"
 
+# Initialize DB
+RUN python /app/storage/initialize.py
+
 CMD ["python", "/app/bot.py"]
