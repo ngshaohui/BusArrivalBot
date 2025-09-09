@@ -31,6 +31,7 @@ class BusStop(TypedDict):
     Latitude: float
     Longitude: float
 
+
 class NextBusInfo(TypedDict):
     OriginCode: str
     DestinationCode: str

@@ -20,7 +20,7 @@ async def list_saved_stops(
     chat_id = get_chat_id(update, None)
     if not chat_id or update.message is None:
         return  # ignore malformed requests
-    
+
     user_exists = storage_utility.check_user_exists(update.message.chat_id)
     if not user_exists:
         return await settings_not_enabled_message(update)
