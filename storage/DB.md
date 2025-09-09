@@ -13,7 +13,7 @@ The database shall be used to store user settings.
 
 ### Table: `saved_stops`
 
-The column `busses` shall be a comma separated list of service numbers.
+The column `bus_stop_codes` shall be a comma separated list of service numbers.
 
 ## Init commands
 

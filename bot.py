@@ -45,13 +45,19 @@ async def start(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         return
     """Send a message when the command /start is issued."""
     await update.message.reply_text(
-        f"""Use the BusStopCode to get arrival timings for a particular stop.
-e.g. 08031
+        f"""Use the BusStopCode to get arrival timings for a particular stop
+`08031`
+
+View the list of bus routes along the bus stop with the bus number
+`170`
+
+Save the BusStopCode for quick access and view the list of saved stops with /list
+`save 08031`
 
 You can also send your location to find the nearest stops!
 
-{config("VERSION")}
-"""
+{config("VERSION")}""",
+        parse_mode="Markdown",
     )
 
 

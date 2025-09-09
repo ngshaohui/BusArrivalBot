@@ -26,6 +26,13 @@ The dependencies in `pyproject.toml` will be installed automatically
 uv run bot.py
 ```
 
+## Linting and formatting
+
+```bash
+uv run ruff check
+uv run ruff format
+```
+
 ## Testing
 
 ```bash
@@ -74,19 +81,23 @@ docker run --name bus-arrival-bot --rm bus-arrival-bot:0.1.0
 
 ### Milestone 7
 
+- [ ] Refactor `text_reply_handler.py` and `callback_query_handler.py`
+- [ ] [Precommit hooks](https://docs.astral.sh/uv/guides/integration/pre-commit/)
+- [ ] CI/CD tests
+
 ### Work
 
-- [ ] [Chore] Update help command
-- [ ] [Chore] Explore loading data from local files, no need to call API repeatedly when doing development
-- [ ] [Chore] Explore command to launch app in staging development mode
-- [ ] [Chore] Handle request timeouts and error codes from LTA Datamall
-- [ ] [Chore] Fix comments
-- [ ] [Chore] Reduce repeated code for bus route directions
-- [ ] [Feature] DB migration scripts
-- [ ] [Feature] Paginate search query
-- [ ] [Feature] Additional bus information such as double decker, bus load
-- [ ] [Feature] Compare common stops
-- [ ] [Optimization] Reduce size of Dockerfile (currently 299.24 MB)
+- [Chore] Explore loading data from local files, no need to call API repeatedly when dodevelopment
+- [Chore] Explore command to launch app in staging development mode
+- [Chore] Handle request timeouts and error codes from LTA Datamall
+- [Chore] Fix comments
+- [Chore] Reduce repeated code for bus route directions
+- [Feature] DB migration scripts
+- [Feature] DB backup mechanism
+- [Feature] Paginate search query
+- [Feature] Additional bus information such as double decker, bus load
+- [Feature] Compare common stops
+- [Optimization] Reduce size of Dockerfile (currently 299.53 MB)
 
 ## Inconsistency of result displays
 
@@ -95,3 +106,13 @@ Searching for bus stops yields the results in a text message, whereas location s
 The consideration was that inline buttons are not persistent, so it makes it harder to search.
 
 Can consider both approaches to see which provides a better UX.
+
+## Bot commands
+
+List of commands registered with `@BotFather`
+
+```
+help - View usage instructions
+list - List saved stops
+settings - View user configuration settings
+```
