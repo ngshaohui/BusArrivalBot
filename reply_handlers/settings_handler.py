@@ -123,7 +123,7 @@ def revoke_consent_handler(storage_utility: StorageUtility) -> Callable:
     return settings_consent_revoke
 
 
-async def __show_info(update: Update) -> None:
+async def settings_not_enabled_message(update: Update) -> None:
     """
     Show message to user indicating that they need to visit /settings to consent first
     """
@@ -191,7 +191,7 @@ async def add_stop(
 
     user_exists = storage_utility.check_user_exists(update.message.chat_id)
     if not user_exists:
-        return await __show_info(update)
+        return await settings_not_enabled_message(update)
 
     stop_info = get_stop_info(stop_id)
     if stop_info is None:
@@ -241,7 +241,7 @@ def remove_flow_handler(
 
         user_exists = storage_utility.check_user_exists(chat_id)
         if not user_exists:
-            return await __show_info(update)
+            return await settings_not_enabled_message(update)
 
         saved_stops = storage_utility.get_saved_stops(chat_id)
         if len(saved_stops) > 0:
@@ -273,7 +273,7 @@ def remove_handler(
 
         user_exists = storage_utility.check_user_exists(chat_id)
         if not user_exists:
-            return await __show_info(update)
+            return await settings_not_enabled_message(update)
 
         stop_id = query.data.split(",")[1]
         storage_utility.remove_stop(chat_id, stop_id)
@@ -298,7 +298,7 @@ def reorder_flow_handler(
 
         user_exists = storage_utility.check_user_exists(chat_id)
         if not user_exists:
-            return await __show_info(update)
+            return await settings_not_enabled_message(update)
 
         saved_stops = storage_utility.get_saved_stops(chat_id)
         text = "Select a stop to reorder from the list below:"
@@ -368,7 +368,7 @@ def reorder_select_handler(
 
         user_exists = storage_utility.check_user_exists(chat_id)
         if not user_exists:
-            return await __show_info(update)
+            return await settings_not_enabled_message(update)
 
         selected_stop_id = query.data.split(",")[1]
 
@@ -424,7 +424,7 @@ def reorder_handler(
 
         user_exists = storage_utility.check_user_exists(chat_id)
         if not user_exists:
-            return await __show_info(update)
+            return await settings_not_enabled_message(update)
 
         _, stop_id, position, direction = query.data.split(",")
         saved_stops = storage_utility.get_saved_stops(chat_id)
