@@ -180,7 +180,7 @@ def show_settings_handler(storage_utility: StorageUtility) -> Callable:
     return show_settings
 
 
-async def add_stop(
+async def save_stop(
     storage_utility: StorageUtility,
     get_stop_info: GetStopInfo,
     update: Update,
@@ -198,7 +198,7 @@ async def add_stop(
         await update.message.reply_text("Unable to save unknown bus stop code")
         return
 
-    storage_utility.add_stop(update.message.chat_id, stop_id)
+    storage_utility.save_stop(update.message.chat_id, stop_id)
     # TODO use message formatter
     await update.message.reply_text(
         f"""Saved bus stop

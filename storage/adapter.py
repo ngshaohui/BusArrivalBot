@@ -87,9 +87,9 @@ class StorageUtility:
         finally:
             return True
 
-    def add_stop(self, chat_id: int, stop_id: str) -> bool:
+    def save_stop(self, chat_id: int, stop_id: str) -> bool:
         """
-        add a single bus stop to the saved stops
+        add a single bus stop to the list of saved stops
         """
         saved_stops = self.get_saved_stops(chat_id)
         if stop_id in saved_stops:
