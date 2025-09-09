@@ -26,7 +26,13 @@ The dependencies in `pyproject.toml` will be installed automatically
 uv run bot.py
 ```
 
-## Building and running
+## Testing
+
+```bash
+uv run pytest
+```
+
+## Building and running with Docker
 
 ```bash
 docker build --rm -f Dockerfile -t bus-arrival-bot:0.1.0 .
@@ -63,18 +69,24 @@ docker run --name bus-arrival-bot --rm bus-arrival-bot:0.1.0
 ### Milestone 6
 
 - [x] Save stops as favourites
-- [ ] Handle memory leak from cache implementation
+- [x] Handle memory leak from cache implementation
+- [x] Integrate pytest framework
+
+### Milestone 7
 
 ### Work
 
 - [ ] [Chore] Update help command
+- [ ] [Chore] Explore loading data from local files, no need to call API repeatedly when doing development
+- [ ] [Chore] Explore command to launch app in staging development mode
 - [ ] [Chore] Handle request timeouts and error codes from LTA Datamall
 - [ ] [Chore] Fix comments
-- [ ] [Chore] Typecheck
 - [ ] [Chore] Reduce repeated code for bus route directions
+- [ ] [Feature] DB migration scripts
 - [ ] [Feature] Paginate search query
-- [ ] [Optimization] Reduce size of Dockerfile (currently 479.68 MB)
+- [ ] [Feature] Additional bus information such as double decker, bus load
 - [ ] [Feature] Compare common stops
+- [ ] [Optimization] Reduce size of Dockerfile (currently 299.24 MB)
 
 ## Inconsistency of result displays
 
