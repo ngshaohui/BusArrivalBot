@@ -94,6 +94,7 @@ def fetch_stops_and_routes() -> tuple[list[BusStop], list[BusRoute]]:
     bus_stops = all_stops["bus_stops"]
     all_routes: AllBusRoutes = fetch_routes.run()
     bus_routes = all_routes["bus_routes"]
+    logger.info("Fetched latest data from LTA API")
     return bus_stops, bus_routes
 
 

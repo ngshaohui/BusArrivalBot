@@ -1,6 +1,9 @@
+import logging
 import sqlite3
 
 from storage.initialize import init
+
+logger = logging.getLogger(__name__)
 
 
 # TODO use constant for table name
@@ -8,15 +11,15 @@ class StorageUtility:
     def __init__(
         self, in_memory: bool | None = None, con: sqlite3.Connection | None = None
     ):
-        # TODO: use logging to indicate where the DB is being loaded from
         if in_memory is not None:
-            print("serving from mem")
+            logger.info("Initializing new database from memory")
             self.con = sqlite3.connect("file::memory:", uri=True)
             init(self.con)
         elif con is None:
-            print("serving from bus_arrival_bot.db")
+            logger.info("Using database file bus_arrival_bot.db")
             self.con = sqlite3.connect("bus_arrival_bot.db")
         else:
+            logger.info("Using specified database file")
             self.con = con
         if not has_init_tables(self.con):
             raise Exception("Database has not been initialized")
