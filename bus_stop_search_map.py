@@ -1,77 +1,88 @@
 # full word to the abbreviations are on openstreetmap
 WORDS_MAP = {
-    "singapore": "s'pore",
-    "road": "rd",
-    "drive": "dr",
-    "gardens": "gdns",
-    "cresent": "cres",
-    "station": "stn",
-    "opposite": "opp",
-    "primary": "pr",
-    "secondary": "sec",
-    "college": "coll",
-    "school": "sch",
-    "complex": "cplx",
-    "terminal": "ter",
-    "avenue": "ave",
-    "bukit": "bt",
+    "academy": "acad",  # Civil Defence Acad
+    "aerospace": "a'space",
     "after": "aft",
+    "and": "&",
+    "apartments": "apts",  # Hillview Apts
+    "association": "assn",
+    "avenue": "ave",
     "before": "bef",
     "between": "bet",
     "block": "blk",
-    "centre": "ctr",
-    "jalan": "jln",
-    "corporation": "corp",
-    "service": "svc",
-    "services": "svcs",
-    "woodlands": "w'lands",
-    "squre": "sq",
-    "serangoon": "s'goon",
+    "building": "bldg",
+    "bukit": "bt",
     "carpark": "cp",
-    "north": "nth",
-    "place": "pl",
-    "kampong": "kg",
+    "cemetery": "cemy",  # Bef Muslim Cemy Path 7
+    "centre": "ctr",
+    "children": "child",
+    "christian": "chr",  # Aft Chr Cemy Path 9
+    "choa chu kang": "cck",
+    "church": "ch",
+    "college": "coll",
     "commonwealth": "c'wealth",
+    "company": "co",
+    "complex": "cplx",
+    "corporation": "corp",
+    "court": "ct",
+    "cresent": "cres",
+    "environment": "env",
+    "drive": "dr",
+    "estate": "est",
+    "food centre": "fc",
+    "garden": "gdn",  # Nirvana Memorial Gdn
+    "gardens": "gdns",
+    "heights": "hts",
+    "hospital": "hosp",
+    "house": "hse",
+    "inspection": "insp",
     "interchange": "int",
     "international": "intl",
-    "tanjong": "tg",
-    "company": "co",
-    "inspection": "insp",
-    "and": "&",
+    "kampong": "kg",
+    "jalan": "jln",
     "library": "lib",
-    "estate": "est",
-    "hospital": "hosp",
-    "children": "child",
-    "church": "ch",
-    "environment": "env",
-    "metropolitan": "met",
-    "saint": "st.",
-    "association": "assn",
-    "choa chu kang": "cck",
-    "building": "bldg",
-    "reservoir": "resvr",
+    "link": "lk",  # Bef Seletar A'Space Lk
     "lorong": "lor",
-    "court": "ct",
-    "walk": "wk",  # grace wk
-    "terrace": "terr",  # chuan terr
+    "market": "mkt",
     "methodist": "meth",  # Aft Trinity Meth Ch
-    "schoolhouse": "s/h",  # KiddiWinkie S/H @ Mountbatten
-    "house": "hse",
+    "metropolitan": "met",
+    "mosque": "mque",  # Pusara Aman Mque
+    "north": "nth",
+    "opposite": "opp",
     "park": "pk",  # East Coast Pk Svc Rd
+    "place": "pl",
+    "plant": "plt",
     "playground": "p/g",
+    "primary": "pr",
+    "reclamation": "reclam",
+    "reservoir": "resvr",
+    "road": "rd",
+    "saint": "st.",
+    "school": "sch",
+    "schoolhouse": "s/h",  # KiddiWinkie S/H @ Mountbatten
+    "secondary": "sec",
+    "serangoon": "s'goon",
+    "service": "svc",
+    "services": "svcs",
+    "singapore": "s'pore",
+    "squre": "sq",
+    "station": "stn",
+    "tanjong": "tg",
+    "temple": "tp",
+    "temporary": "temp",
+    "terminal": "ter",
+    "terrace": "terr",  # chuan terr
     "tower": "twr",  # Suntec Twr Two
     "towers": "twrs",  # Lutheran Twrs
-    "heights": "hts",
-    "market": "mkt",
-    "food centre": "fc",
-    "temporary": "temp",
+    "townhouse": "townhse",  # Opp Loyang Townhse
+    "townhouses": "townhse",  # Opp Loyang Townhse (map plural to same one)
+    "walk": "wk",  # grace wk
     "water": "wtr",  # Kranji Wtr Reclam Plt
-    "reclamation": "reclam",
-    "plant": "plt",
-    "aerospace": "a'space",
-    "link": "lk",  # Bef Seletar A'Space Lk
-    "temple": "tp",
+    "woodlands": "w'lands",
 }
+
+# not mapped
+# S.A. Deaf -> Singapore Association
 
 
 def transform_query_token(query_token: str) -> str:

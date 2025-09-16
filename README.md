@@ -81,7 +81,10 @@ docker run --name bus-arrival-bot --rm bus-arrival-bot:0.1.0
 
 ### Milestone 7
 
-- [ ] Refactor `text_reply_handler.py` and `callback_query_handler.py`
+- [ ] Refactor into modules by functional responsbility
+
+### Milestone 8
+
 - [ ] [Precommit hooks](https://docs.astral.sh/uv/guides/integration/pre-commit/)
 - [ ] CI/CD tests
 
