@@ -90,8 +90,6 @@ docker run --name bus-arrival-bot --rm bus-arrival-bot:0.1.0
 
 ### Work
 
-- [Chore] Explore loading data from local files, no need to call API repeatedly when dodevelopment
-- [Chore] Explore command to launch app in staging development mode
 - [Chore] Handle request timeouts and error codes from LTA Datamall
 - [Chore] Fix comments
 - [Chore] Reduce repeated code for bus route directions

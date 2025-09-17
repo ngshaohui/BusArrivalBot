@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Callable
 
@@ -36,6 +37,8 @@ logging.basicConfig(
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
+
+DEVELOPMENT_MODE = config("DEVELOPMENT_MODE", default=False, cast=bool)
 
 
 # Define a few command handlers. These usually take the two arguments update and
@@ -88,13 +91,25 @@ def location_handler(service_integrator: ServiceIntegrator) -> Callable:
     return location
 
 
-def fetch_stops_and_routes() -> tuple[list[BusStop], list[BusRoute]]:
-    """Fetches bus stops and routes data."""
-    all_stops: AllBusStops = fetch_stops.run()
-    bus_stops = all_stops["bus_stops"]
-    all_routes: AllBusRoutes = fetch_routes.run()
-    bus_routes = all_routes["bus_routes"]
-    logger.info("Fetched latest data from LTA API")
+def fetch_stops_and_routes(
+    development_mode: bool = False,
+) -> tuple[list[BusStop], list[BusRoute]]:
+    """
+    Fetches bus stops and routes data.
+    """
+    if development_mode:
+        with open("bus_stops.json") as f1, open("bus_routes.json") as f2:
+            all_stops: AllBusStops = json.loads(f1.read())
+            bus_stops = all_stops["bus_stops"]
+            all_routes: AllBusRoutes = json.loads(f2.read())
+            bus_routes = all_routes["bus_routes"]
+        logger.info("Load data from local filesystem")
+    else:
+        all_stops: AllBusStops = fetch_stops.run()
+        bus_stops = all_stops["bus_stops"]
+        all_routes: AllBusRoutes = fetch_routes.run()
+        bus_routes = all_routes["bus_routes"]
+        logger.info("Fetched latest data from LTA API")
     return bus_stops, bus_routes
 
 
@@ -110,8 +125,10 @@ def refresh_service_integrator(service_integrator: ServiceIntegrator):
 def main() -> None:
     """Start the bot."""
     # Init application state
-    service_integrator = ServiceIntegrator(*fetch_stops_and_routes())
-    storage_utility = StorageUtility()
+    service_integrator = ServiceIntegrator(
+        *fetch_stops_and_routes(development_mode=DEVELOPMENT_MODE)
+    )
+    storage_utility = StorageUtility(in_memory=DEVELOPMENT_MODE)
 
     # Fetch new data once a week on Sundays
     scheduler = BackgroundScheduler()
