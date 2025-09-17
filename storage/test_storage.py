@@ -55,7 +55,7 @@ class TestStorage(unittest.TestCase):
         """
         add one stop to a list of empty stops and retrieve it
         """
-        self.storage_utility.add_stop(123456, "42012")
+        self.storage_utility.save_stop(123456, "42012")
         stops = self.storage_utility.get_saved_stops(123456)
         self.assertEqual(stops, ["42012"])
 
