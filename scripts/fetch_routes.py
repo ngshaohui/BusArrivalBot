@@ -42,7 +42,7 @@ def fetch_routes() -> list[BusRoute]:
     skips = 0  # use skips since API can only return 500 results at once
 
     # Build query string
-    headers = {"AccountKey": config("ACCOUNT_KEY")}
+    headers = {"AccountKey": config("ACCOUNT_KEY", cast=str)}
 
     while True:
         res = requests.get(f"{URL_GET_ALL_ROUTES}?$skip={skips}", headers=headers)

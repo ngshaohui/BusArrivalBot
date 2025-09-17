@@ -125,7 +125,7 @@ def main() -> None:
     scheduler.start()
 
     # Create the Application and pass it your bot's token.
-    application = Application.builder().token(config("BOT_TOKEN")).build()  # type: ignore
+    application = Application.builder().token(config("BOT_TOKEN", cast=str)).build()
 
     # on different commands
     application.add_handler(CommandHandler("start", start))
