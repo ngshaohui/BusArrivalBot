@@ -2,7 +2,7 @@
 from scipy.spatial import cKDTree as KDTree  # type: ignore[attr-defined]
 
 from typing import Callable, Optional
-from bus_stop_search_map import transform_query_token
+from .bus_stop_search_map import transform_query_token
 from custom_typings import BusStop, Coordinate
 
 type GetNearestStops = Callable[[Coordinate, Optional[int]], list[BusStop]]

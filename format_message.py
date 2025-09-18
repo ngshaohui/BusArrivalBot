@@ -1,6 +1,6 @@
 from functools import partial
 
-from bus_arrival import get_arrival_time_mins
+from bus_service.bus_arrival import get_arrival_time_mins
 from custom_typings import BusInfo, BusStop
 
 # TODO need to refer to documentation on how to serve this information in a standardized manner

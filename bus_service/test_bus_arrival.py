@@ -1,5 +1,5 @@
 import unittest
-from bus_arrival import get_arrival_time_mins
+from .bus_arrival import get_arrival_time_mins
 
 UNIX_TIME = 1732635550  # 2024-11-26T23:39:10+08:00
 

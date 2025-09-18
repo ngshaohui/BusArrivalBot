@@ -4,9 +4,9 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.error import BadRequest
 from telegram.ext import Application, CallbackQueryHandler, ContextTypes
 
-from bus_stops import GetStopInfo
+from bus_service.adapter import BusServiceAdapter
+from bus_service.bus_stops import GetStopInfo
 from constants import SETTINGS_ACTIONS
-from service_integrator import ServiceIntegrator
 from storage.adapter import StorageUtility
 from utils import get_chat_id
 
@@ -443,7 +443,7 @@ def reorder_handler(
 
 def register_settings_handlers(
     application: Application,
-    service_integrator: ServiceIntegrator,
+    bus_service_adapter: BusServiceAdapter,
     storage_utility: StorageUtility,
 ) -> None:
     """
@@ -475,31 +475,31 @@ def register_settings_handlers(
     )
     application.add_handler(
         CallbackQueryHandler(
-            remove_flow_handler(storage_utility, service_integrator.get_stop_info),
+            remove_flow_handler(storage_utility, bus_service_adapter.get_stop_info),
             pattern=SETTINGS_ACTIONS.REMOVE_FLOW.value,
         )
     )
     application.add_handler(
         CallbackQueryHandler(
-            remove_handler(storage_utility, service_integrator.get_stop_info),
+            remove_handler(storage_utility, bus_service_adapter.get_stop_info),
             pattern=rf"{SETTINGS_ACTIONS.REMOVE.value},\d{{5}}",
         )
     )
     application.add_handler(
         CallbackQueryHandler(
-            reorder_flow_handler(storage_utility, service_integrator.get_stop_info),
+            reorder_flow_handler(storage_utility, bus_service_adapter.get_stop_info),
             pattern=SETTINGS_ACTIONS.REORDER_FLOW.value,
         )
     )
     application.add_handler(
         CallbackQueryHandler(
-            reorder_select_handler(storage_utility, service_integrator.get_stop_info),
+            reorder_select_handler(storage_utility, bus_service_adapter.get_stop_info),
             pattern=rf"{SETTINGS_ACTIONS.REORDER_SELECT.value},\d{{5}}",
         )
     )
     application.add_handler(
         CallbackQueryHandler(
-            reorder_handler(storage_utility, service_integrator.get_stop_info),
+            reorder_handler(storage_utility, bus_service_adapter.get_stop_info),
             pattern=rf"{SETTINGS_ACTIONS.REORDER.value},\d{{5}},\d,[01]",
         )
     )

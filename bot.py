@@ -14,6 +14,7 @@ from telegram.ext import (
     filters,
 )
 
+from bus_service.adapter import BusServiceAdapter
 from custom_typings import AllBusRoutes, AllBusStops, BusRoute, BusStop
 from reply_handlers.callback_query_handler import (
     bus_stop_handler,
@@ -26,7 +27,6 @@ from reply_handlers.settings_handler import (
 )
 from reply_handlers.text_reply_handler import message_handler
 from scripts import fetch_routes, fetch_stops
-from service_integrator import ServiceIntegrator
 from storage.adapter import StorageUtility
 
 # Enable logging
@@ -64,7 +64,7 @@ You can also send your location to find the nearest stops!
     )
 
 
-def location_handler(service_integrator: ServiceIntegrator) -> Callable:
+def location_handler(bus_service_adapter: BusServiceAdapter) -> Callable:
     """
     send prompt for users to select nearest bus stop (out of 3 candidates)
     """
@@ -76,7 +76,7 @@ def location_handler(service_integrator: ServiceIntegrator) -> Callable:
         # get nearest stops
         latitude = update.message.location.latitude
         longitude = update.message.location.longitude
-        nearest_stops: list[BusStop] = service_integrator.get_nearest_stops(
+        nearest_stops: list[BusStop] = bus_service_adapter.get_nearest_stops(
             (latitude, longitude), 3
         )
 
@@ -113,11 +113,11 @@ def fetch_stops_and_routes(
     return bus_stops, bus_routes
 
 
-def refresh_service_integrator(service_integrator: ServiceIntegrator):
+def refresh_bus_service_adapter(bus_service_adapter: BusServiceAdapter):
     """refreshes the service integrator"""
 
     def refresh() -> None:
-        service_integrator.refresh(*fetch_stops_and_routes())
+        bus_service_adapter.refresh(*fetch_stops_and_routes())
 
     return refresh
 
@@ -125,7 +125,7 @@ def refresh_service_integrator(service_integrator: ServiceIntegrator):
 def main() -> None:
     """Start the bot."""
     # Init application state
-    service_integrator = ServiceIntegrator(
+    bus_service_adapter = BusServiceAdapter(
         *fetch_stops_and_routes(development_mode=DEVELOPMENT_MODE)
     )
     storage_utility = StorageUtility(in_memory=DEVELOPMENT_MODE)
@@ -133,7 +133,7 @@ def main() -> None:
     # Fetch new data once a week on Sundays
     scheduler = BackgroundScheduler()
     scheduler.add_job(
-        refresh_service_integrator(service_integrator),
+        refresh_bus_service_adapter(bus_service_adapter),
         trigger="cron",
         day_of_week="sun",
         hour=0,
@@ -154,22 +154,22 @@ def main() -> None:
     # on non command i.e message
     application.add_handler(
         MessageHandler(
-            filters.TEXT, message_handler(service_integrator, storage_utility)
+            filters.TEXT, message_handler(bus_service_adapter, storage_utility)
         )
     )
     application.add_handler(
-        MessageHandler(filters.LOCATION, location_handler(service_integrator))
+        MessageHandler(filters.LOCATION, location_handler(bus_service_adapter))
     )
     application.add_handler(
-        CallbackQueryHandler(bus_stop_handler(service_integrator), pattern=r"\d{5}")
+        CallbackQueryHandler(bus_stop_handler(bus_service_adapter), pattern=r"\d{5}")
     )
     application.add_handler(
         CallbackQueryHandler(
-            route_direction_handler(service_integrator), pattern=r"\d{1,3}\w?\,[12]"
+            route_direction_handler(bus_service_adapter), pattern=r"\d{1,3}\w?\,[12]"
         )
     )
     # settings
-    register_settings_handlers(application, service_integrator, storage_utility)
+    register_settings_handlers(application, bus_service_adapter, storage_utility)
 
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)
