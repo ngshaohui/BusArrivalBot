@@ -6,9 +6,9 @@ from telegram.ext import Application, CallbackQueryHandler, ContextTypes
 
 from bus_service.adapter import BusServiceAdapter
 from bus_service.bus_stops import GetStopInfo
-from constants import SETTINGS_ACTIONS
 from storage.adapter import StorageUtility
-from utils import get_chat_id
+from utils.bot_utils import get_chat_id
+from utils.constants import SETTINGS_ACTIONS
 
 
 BACK_TO_SETTINGS_BUTTON = [

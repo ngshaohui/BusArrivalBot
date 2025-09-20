@@ -1,7 +1,7 @@
 import random
 import unittest
 from .bus_stops import nearest_stops_utility
-from custom_typings import BusStop
+from utils.custom_typings import BusStop
 
 STOPS: list[BusStop] = [
     {

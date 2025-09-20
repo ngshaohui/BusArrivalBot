@@ -4,7 +4,7 @@ composes functions to give enhanced output
 
 from typing import Callable
 
-from custom_typings import BusRoute, BusStop
+from utils.custom_typings import BusRoute, BusStop
 from .bus_route import bus_route_utility
 from .bus_stops import nearest_stops_utility
 

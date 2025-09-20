@@ -8,7 +8,7 @@ import requests
 
 from decouple import config
 
-from custom_typings import AllBusStops, BusStop
+from utils.custom_typings import AllBusStops, BusStop
 
 URL_GET_ALL_STOPS = "https://datamall2.mytransport.sg/ltaodataservice/BusStops"
 

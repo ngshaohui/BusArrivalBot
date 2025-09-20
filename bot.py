@@ -15,7 +15,7 @@ from telegram.ext import (
 )
 
 from bus_service.adapter import BusServiceAdapter
-from custom_typings import AllBusRoutes, AllBusStops, BusRoute, BusStop
+from utils.custom_typings import AllBusRoutes, AllBusStops, BusRoute, BusStop
 from reply_handlers.callback_query_handler import (
     bus_stop_handler,
     route_direction_handler,

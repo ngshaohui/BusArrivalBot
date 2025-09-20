@@ -4,7 +4,7 @@ search for bus stops within a route
 
 from typing import Callable
 
-from custom_typings import BusRoute, BusStop
+from utils.custom_typings import BusRoute, BusStop
 
 type GetBusRoute = Callable[[str, int], list[BusStop] | None]
 

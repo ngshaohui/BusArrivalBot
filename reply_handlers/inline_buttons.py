@@ -1,6 +1,6 @@
 from telegram import InlineKeyboardButton
 
-from custom_typings import BusStop
+from utils.custom_typings import BusStop
 
 
 def make_change_route_btn(

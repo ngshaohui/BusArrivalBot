@@ -3,8 +3,8 @@ from datetime import datetime
 from decouple import config
 import requests
 
-from custom_typings import BusArrivalServiceResponse, BusInfo, TimestampISO8601
-from lru_cache import LRUCache
+from utils.custom_typings import BusArrivalServiceResponse, BusInfo, TimestampISO8601
+from utils.lru_cache import LRUCache
 
 URL_GET_ARRIVING_BUSSES = (
     "https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival"

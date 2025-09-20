@@ -1,11 +1,11 @@
 from telegram import InlineKeyboardMarkup, Update
 
 from bus_service.bus_stops import GetStopInfo
-from custom_typings import BusStop
 from reply_handlers.inline_buttons import get_stop_inline_button
 from reply_handlers.settings_handler import settings_not_enabled_message
 from storage.adapter import StorageUtility
-from utils import get_chat_id
+from utils.custom_typings import BusStop
+from utils.bot_utils import get_chat_id
 
 
 async def list_saved_stops(
