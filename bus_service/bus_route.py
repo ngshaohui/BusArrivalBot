@@ -32,6 +32,7 @@ def bus_route_utility(
         return bus_route_map.get((bus_number, direction), None)
 
     def get_route_stops(bus_number: str, direction: int) -> list[BusStop] | None:
+        bus_number = bus_number.upper()
         route = __get_bus_route(bus_number, direction)
 
         if route is None:
