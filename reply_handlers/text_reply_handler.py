@@ -116,6 +116,7 @@ async def bus_route(
         return
 
     # craft message
+    bus_number = bus_number.upper()
     route_info = get_route_stops(bus_number, 1)
     if route_info is None:
         await update.message.reply_text("Unknown bus number")

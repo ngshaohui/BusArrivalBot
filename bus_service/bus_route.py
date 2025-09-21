@@ -37,7 +37,6 @@ def bus_route_utility(
         get list stops along a bus route
         has either 1 or 2 possible directions (loop or bidirectional)
         """
-        bus_number = bus_number.upper()
         route = __get_bus_route(bus_number, direction)
 
         if route is None:
