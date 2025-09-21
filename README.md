@@ -26,6 +26,24 @@ The dependencies in `pyproject.toml` will be installed automatically
 uv run bot.py
 ```
 
+### Development mode
+
+When developing locally
+
+1. Run the scripts to save the datasets on the disk as `bus_routes.json` and `bus_stops.json`
+
+```bash
+# commands to be run from the project root
+uv run python -m scripts.fetch_stops
+uv run python -m scripts.fetch_routes
+```
+
+2. Set `DEVELOPMENT_MODE=True` in the `.env` file.
+
+This loads the bus_routes and bus_stops from the disk, so that the API fetch for all the stops and routes does not happen each time the application is restarted
+
+An empty database will be created in memory which is discarded once the bot is stopped
+
 ## Linting and formatting
 
 ```bash
