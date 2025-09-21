@@ -6,7 +6,7 @@ from typing import Callable
 
 from utils.custom_typings import BusRoute, BusStop
 from .bus_route import bus_route_utility
-from .bus_stops import nearest_stops_utility
+from .bus_stops import bus_stop_utility
 
 type GetRouteStops = Callable[[str, int], list[BusStop] | None]
 
@@ -21,5 +21,5 @@ class BusServiceAdapter:
             self.get_nearest_stops,
             self.get_stop_info,
             self.search_possible_stops,
-        ) = nearest_stops_utility(bus_stops)
+        ) = bus_stop_utility(bus_stops)
         self.get_route_stops = bus_route_utility(bus_routes, self.get_stop_info)

@@ -99,9 +99,9 @@ def fetch_stops_and_routes(
     """
     if development_mode:
         with open("bus_stops.json") as f1, open("bus_routes.json") as f2:
-            all_stops: AllBusStops = json.loads(f1.read())
+            all_stops: AllBusStops = json.load(f1)
             bus_stops = all_stops["bus_stops"]
-            all_routes: AllBusRoutes = json.loads(f2.read())
+            all_routes: AllBusRoutes = json.load(f2)
             bus_routes = all_routes["bus_routes"]
         logger.info("Load data from local filesystem")
     else:

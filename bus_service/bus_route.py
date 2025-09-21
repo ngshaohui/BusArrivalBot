@@ -4,13 +4,14 @@ search for bus stops within a route
 
 from typing import Callable
 
+from bus_service.bus_stops import GetStopInfo
 from utils.custom_typings import BusRoute, BusStop
 
 type GetBusRoute = Callable[[str, int], list[BusStop] | None]
 
 
 def bus_route_utility(
-    bus_routes: list[BusRoute], get_stop_info: Callable[[str], BusStop | None]
+    bus_routes: list[BusRoute], get_stop_info: GetStopInfo
 ) -> GetBusRoute:
     # {"67": ["44009", "44461", "44469", "44009"]}
     bus_route_map: dict[tuple[str, int], list[str]] = {}
@@ -32,6 +33,10 @@ def bus_route_utility(
         return bus_route_map.get((bus_number, direction), None)
 
     def get_route_stops(bus_number: str, direction: int) -> list[BusStop] | None:
+        """
+        get list stops along a bus route
+        has either 1 or 2 possible directions (loop or bidirectional)
+        """
         bus_number = bus_number.upper()
         route = __get_bus_route(bus_number, direction)
 

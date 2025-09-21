@@ -1,7 +1,7 @@
 from freezegun import freeze_time
 import pytest
 
-from lru_cache import LRUCache
+from .lru_cache import LRUCache
 
 
 def test_key_existence():

@@ -1,8 +1,10 @@
 import random
 import unittest
+
+from utils.custom_typings import BusStop
 from .fetch_stops import bus_stops_checksum
 
-STOPS = [
+STOPS: list[BusStop] = [
     {
         "BusStopCode": "14519",
         "RoadName": "Sentosa Gateway",

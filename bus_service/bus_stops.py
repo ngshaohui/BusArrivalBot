@@ -10,7 +10,7 @@ type GetStopInfo = Callable[[str], BusStop | None]
 type SearchPossibleStops = Callable[[list[str]], list[BusStop]]
 
 
-def nearest_stops_utility(
+def bus_stop_utility(
     stops: list[BusStop],
 ) -> tuple[GetNearestStops, GetStopInfo, SearchPossibleStops]:
     """
@@ -40,11 +40,9 @@ def nearest_stops_utility(
 
     def get_stop_info(bus_stop_code: str) -> BusStop | None:
         """
-        TODO description
+        obtain BusStop information for a given bus stop code
         """
-        if bus_stop_code not in stops_map:
-            return None
-        return stops_map[bus_stop_code]
+        return stops_map.get(bus_stop_code, None)
 
     def create_token_map(stops: list[BusStop]) -> dict[str, set[str]]:
         """

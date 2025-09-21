@@ -8,7 +8,7 @@ from utils.custom_typings import BusInfo, BusStop
 
 def bus_arrivals_msg(bus: BusInfo, cur_unix_time: int) -> str:
     """
-    TODO describe
+    craft message for bus arrival timing estimates for a single bus number
     """
     next_bus = get_arrival_time(bus["NextBus"]["EstimatedArrival"], cur_unix_time)
     next_bus2 = get_arrival_time(bus["NextBus2"]["EstimatedArrival"], cur_unix_time)
@@ -34,7 +34,8 @@ def next_bus_msg(bus_stop: BusStop, services: list[BusInfo], cur_unix_time: int)
     """
     TODO see if it's possible to resolve drilling cur_unix_time
     TODO consider adding legend
-    TODO describe
+    TODO sort the bus numbers
+    craft message to indicate bus arrival information for a single stop
     """
     title = f"{bus_stop['Description']} | {bus_stop['BusStopCode']}"
     if len(services) == 0:

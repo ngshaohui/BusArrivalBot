@@ -23,7 +23,7 @@ def get_arriving_busses(bus_stop_code: str) -> list[BusInfo]:
 
 def fetch_arriving_busses(bus_stop_code: str) -> list[BusInfo]:
     """
-    TODO describe
+    fetch bus arrival timings from the LTA API
     TODO add try-except to handle non status 200 responses
     TODO add timeout for responses
     """
@@ -38,7 +38,7 @@ def get_arrival_time_mins(
     bus_arrival_time: TimestampISO8601, cur_unix_time: int
 ) -> int:
     """
-    TODO describe
+    gets human readable arrival time remaining for the bus
     """
     dt = datetime.fromisoformat(bus_arrival_time)
     unix_time = int(dt.timestamp())
