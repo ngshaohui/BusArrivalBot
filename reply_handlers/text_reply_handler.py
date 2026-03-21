@@ -61,7 +61,7 @@ def message_handler(
             await bus_route(bus_service_adapter.get_route_stops, update, bus_number)
         elif match := re.match(REGEX_SEARCH, msg, re.IGNORECASE):
             query_str = match.group(1)
-            query: list[str] = re.split(r"\s", query_str)
+            query: list[str] = re.split(r"[\s\/\-]", query_str)
             await search(bus_service_adapter.search_possible_stops, update, query)
         elif match := re.match(REGEX_ADD_STOP, msg, re.IGNORECASE):
             stop_code = match.group(1)

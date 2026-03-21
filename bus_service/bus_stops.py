@@ -1,7 +1,9 @@
+import re
+from typing import Callable, Optional
+
 # workaround: pylance does not resolve cKDTree correctly
 from scipy.spatial import cKDTree as KDTree  # type: ignore[attr-defined]
 
-from typing import Callable, Optional
 from utils.custom_typings import BusStop, Coordinate
 from .bus_stop_search_map import transform_query_token
 
@@ -50,7 +52,8 @@ def bus_stop_utility(
         """
         token_map: dict[str, set[str]] = {}
         for stop in stops:
-            tokens = stop["Description"].lower().split()
+            tokens = re.split(r"[\s\/\-]", stop["Description"].lower())
+            tokens = filter(len, tokens)
 
             for token in tokens:
                 if token not in token_map:

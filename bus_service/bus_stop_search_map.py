@@ -47,14 +47,17 @@ WORDS_MAP = {
     "methodist": "meth",  # Aft Trinity Meth Ch
     "metropolitan": "met",
     "mosque": "mque",  # Pusara Aman Mque
+    "neighbourhood": "n'hood",  # Clementi N'hood Pk
     "north": "nth",
     "opposite": "opp",
     "park": "pk",  # East Coast Pk Svc Rd
     "place": "pl",
     "plant": "plt",
     "playground": "p/g",
+    "post": "po",
     "primary": "pr",
     "reclamation": "reclam",
+    "rehab": "reh.",  # Selarang Pk Drug Reh.
     "reservoir": "resvr",
     "road": "rd",
     "saint": "st.",
@@ -65,6 +68,7 @@ WORDS_MAP = {
     "service": "svc",
     "services": "svcs",
     "singapore": "s'pore",
+    "south": "sth",  # Opp Marina Sth Pier Stn
     "squre": "sq",
     "station": "stn",
     "tanjong": "tg",
