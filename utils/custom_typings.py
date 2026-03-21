@@ -19,11 +19,6 @@ class BusRoute(TypedDict):
     SUN_LastBus: str
 
 
-class AllBusRoutes(TypedDict):
-    bus_routes: list[BusRoute]
-    checksum: str
-
-
 class BusStop(TypedDict):
     BusStopCode: str
     RoadName: str
@@ -55,8 +50,3 @@ class BusInfo(TypedDict):
 
 class BusArrivalServiceResponse(TypedDict):
     Services: list[BusInfo]
-
-
-class AllBusStops(TypedDict):
-    bus_stops: list[BusStop]
-    checksum: str

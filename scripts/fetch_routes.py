@@ -3,11 +3,14 @@
 from functools import reduce
 import hashlib
 import json
+import logging
 import requests
 
 from decouple import config
 
-from utils.custom_typings import AllBusRoutes, BusRoute
+from utils.custom_typings import BusRoute
+
+logger = logging.getLogger(__name__)
 
 URL_GET_ALL_ROUTES = "https://datamall2.mytransport.sg/ltaodataservice/BusRoutes"
 
@@ -55,19 +58,17 @@ def fetch_routes() -> list[BusRoute]:
     return all_routes
 
 
-def run():
+def run() -> list[BusRoute]:
     routes = fetch_routes()
-    all_routes: AllBusRoutes = {
-        "checksum": bus_routes_checksum(routes),
-        "bus_routes": routes,
-    }
-
-    return all_routes
+    checksum = bus_routes_checksum(routes)
+    logger.info(f"Fetched {len(routes)} bus routes (checksum: {checksum})")
+    return routes
 
 
 def main():
+    routes = run()
     with open("bus_routes.json", "w") as outfile:
-        json.dump(run(), outfile)
+        json.dump(routes, outfile)
 
 
 if __name__ == "__main__":

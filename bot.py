@@ -15,7 +15,7 @@ from telegram.ext import (
 )
 
 from bus_service.adapter import BusServiceAdapter
-from utils.custom_typings import AllBusRoutes, AllBusStops, BusRoute, BusStop
+from utils.custom_typings import BusRoute, BusStop
 from reply_handlers.callback_query_handler import (
     bus_stop_handler,
     route_direction_handler,
@@ -99,16 +99,12 @@ def fetch_stops_and_routes(
     """
     if development_mode:
         with open("bus_stops.json") as f1, open("bus_routes.json") as f2:
-            all_stops: AllBusStops = json.load(f1)
-            bus_stops = all_stops["bus_stops"]
-            all_routes: AllBusRoutes = json.load(f2)
-            bus_routes = all_routes["bus_routes"]
+            bus_stops: list[BusStop] = json.load(f1)
+            bus_routes: list[BusRoute] = json.load(f2)
         logger.info("Load data from local filesystem")
     else:
-        all_stops: AllBusStops = fetch_stops.run()
-        bus_stops = all_stops["bus_stops"]
-        all_routes: AllBusRoutes = fetch_routes.run()
-        bus_routes = all_routes["bus_routes"]
+        bus_stops = fetch_stops.run()
+        bus_routes = fetch_routes.run()
         logger.info("Fetched latest data from LTA API")
     return bus_stops, bus_routes
 

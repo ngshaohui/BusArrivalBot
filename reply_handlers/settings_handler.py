@@ -157,8 +157,6 @@ def show_settings_handler(storage_utility: StorageUtility) -> Callable:
     async def show_settings(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """
         TODO handle scenario where stops exist or don't exist already
-        TODO have the user agree to store settings first, can check if exists in db
-        TODO revoke consent
         """
         chat_id = get_chat_id(update, context)
         if chat_id is None:

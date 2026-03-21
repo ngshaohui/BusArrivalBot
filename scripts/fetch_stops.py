@@ -1,14 +1,16 @@
 # Run this script to get an updated all_stops.json
-# TODO have some form of message to indicate how many bus all_stops are there and a checksum for logging
 
 from functools import reduce
 import hashlib
 import json
-import requests
+import logging
 
 from decouple import config
+import requests
 
-from utils.custom_typings import AllBusStops, BusStop
+from utils.custom_typings import BusStop
+
+logger = logging.getLogger(__name__)
 
 URL_GET_ALL_STOPS = "https://datamall2.mytransport.sg/ltaodataservice/BusStops"
 
@@ -58,16 +60,17 @@ def fetch_stops() -> list[BusStop]:
     return all_stops
 
 
-def run():
+def run() -> list[BusStop]:
     stops = fetch_stops()
-    all_stops: AllBusStops = {"checksum": bus_stops_checksum(stops), "bus_stops": stops}
-
-    return all_stops
+    checksum = bus_stops_checksum(stops)
+    logger.info(f"Fetched {len(stops)} bus stops (checksum: {checksum})")
+    return stops
 
 
 def main():
+    stops = run()
     with open("bus_stops.json", "w") as outfile:
-        json.dump(run(), outfile)
+        json.dump(stops, outfile)
 
 
 if __name__ == "__main__":
