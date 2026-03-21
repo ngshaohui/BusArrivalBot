@@ -65,6 +65,11 @@ def bus_stop_handler(bus_service_adapter: BusServiceAdapter) -> Callable:
             await query.edit_message_text("Unknown bus stop code")
             return
         busses = get_arriving_busses(stop_id)  # stop_id should never be None
+        if busses is None:
+            await query.edit_message_text(
+                "Currently experiencing issues with LTA's API, please try again later"
+            )
+            return
         reply_msg = next_bus_msg(stop_info, busses, int(time.time()))
 
         # refresh button

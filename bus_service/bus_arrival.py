@@ -1,10 +1,17 @@
 from datetime import datetime
+import logging
+import time
 
 from decouple import config
 import requests
 
 from utils.custom_typings import BusArrivalServiceResponse, BusInfo, TimestampISO8601
 from utils.lru_cache import LRUCache
+
+logger = logging.getLogger(__name__)
+
+__last_error_log_time: float = 0
+__ERROR_LOG_COOLDOWN = 1800  # 30 minutes
 
 URL_GET_ARRIVING_BUSSES = (
     "https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival"
@@ -13,25 +20,36 @@ URL_GET_ARRIVING_BUSSES = (
 __bus_info_cache = LRUCache[list[BusInfo]](ttl=20, item_limit=100)
 
 
-def get_arriving_busses(bus_stop_code: str) -> list[BusInfo]:
+def get_arriving_busses(bus_stop_code: str) -> list[BusInfo] | None:
     arriving_busses = __bus_info_cache.get(bus_stop_code)
     if arriving_busses is None:
         arriving_busses = fetch_arriving_busses(bus_stop_code)
-        __bus_info_cache.set(bus_stop_code, arriving_busses)
+        if arriving_busses is not None:
+            __bus_info_cache.set(bus_stop_code, arriving_busses)
     return arriving_busses
 
 
-def fetch_arriving_busses(bus_stop_code: str) -> list[BusInfo]:
+def fetch_arriving_busses(bus_stop_code: str) -> list[BusInfo] | None:
     """
     fetch bus arrival timings from the LTA API
-    TODO add try-except to handle non status 200 responses
-    TODO add timeout for responses
     """
     params = {"BusStopCode": bus_stop_code}
     headers = {"AccountKey": config("ACCOUNT_KEY")}
-    res = requests.get(URL_GET_ARRIVING_BUSSES, headers=headers, params=params)
-    json_data: BusArrivalServiceResponse = res.json()
-    return json_data["Services"]
+    try:
+        res = requests.get(
+            URL_GET_ARRIVING_BUSSES, headers=headers, params=params, timeout=10
+        )
+        res.raise_for_status()
+        json_data: BusArrivalServiceResponse = res.json()
+        return json_data["Services"]
+    except requests.exceptions.RequestException as e:
+        # throttle error logging to prevent them from flooding logs
+        now = time.time()
+        global __last_error_log_time
+        if now - __last_error_log_time > __ERROR_LOG_COOLDOWN:
+            logger.error(f"Failed to fetch bus arrivals {e}")
+            __last_error_log_time = now
+        return None
 
 
 def get_arrival_time_mins(

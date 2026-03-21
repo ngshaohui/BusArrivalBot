@@ -108,7 +108,6 @@ docker run --name bus-arrival-bot --rm bus-arrival-bot:0.1.0
 
 ### Work
 
-- [Chore] Handle request timeouts and error codes from LTA Datamall
 - [Chore] Fix comments
 - [Chore] Reduce repeated code for bus route directions
 - [Feature] DB migration scripts

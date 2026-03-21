@@ -94,6 +94,11 @@ async def bus_stop_code(
         await update.message.reply_text("Unknown bus stop code")
         return
     busses = get_arriving_busses(stop_id)
+    if busses is None:
+        await update.message.reply_text(
+            "Currently experiencing issues with LTA's API, please try again later"
+        )
+        return
     reply_msg = next_bus_msg(stop_info, busses, int(time.time()))
 
     # refresh button
