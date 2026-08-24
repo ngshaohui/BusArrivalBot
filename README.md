@@ -44,11 +44,12 @@ This loads the bus_routes and bus_stops from the disk, so that the API fetch for
 
 An empty database will be created in memory which is discarded once the bot is stopped
 
-## Linting and formatting
+## Linting, formatting and typechecking
 
 ```bash
 uv run ruff check
 uv run ruff format
+uv run ty check
 ```
 
 ## Testing

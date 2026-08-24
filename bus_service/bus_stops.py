@@ -1,12 +1,12 @@
 import re
-from typing import Callable, Optional
+from typing import Callable
 
 from scipy.spatial import KDTree
 
 from utils.custom_typings import BusStop, Coordinate
 from .bus_stop_search_map import transform_query_token
 
-type GetNearestStops = Callable[[Coordinate, Optional[int]], list[BusStop]]
+type GetNearestStops = Callable[[Coordinate, int], list[BusStop]]
 type GetStopInfo = Callable[[str], BusStop | None]
 type SearchPossibleStops = Callable[[list[str]], list[BusStop]]
 
@@ -24,16 +24,14 @@ def bus_stop_utility(
     )
     kd_tree = KDTree(stop_coordinates)
 
-    def get_nearest_stops(
-        coord: Coordinate, num_stops: Optional[int] = 3
-    ) -> list[BusStop]:
+    def get_nearest_stops(coord: Coordinate, num_stops: int = 3) -> list[BusStop]:
         _, nd_indexes = kd_tree.query([coord], k=num_stops)
         # convert numpy 2d array (with only 1 row) to list of integers
         # numpy_ndarray -> [[1, 2, 3]] -> [1, 2, 3]
         indexes = nd_indexes.tolist()[0]
         # indexes is type Any since it is either (1) an integer or (2) array of integers
         # should always be array of integers since we always(?) query for multiple stops
-        nearest_stops = list(map(lambda x: stops[x], indexes))
+        nearest_stops = [stops[idx] for idx in indexes]
         return nearest_stops
 
     # create dictionary with BusStopCode as key and BusStop as value
