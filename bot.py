@@ -143,13 +143,9 @@ def main() -> None:
     # on non command i.e message
     application.add_handler(MessageHandler(filters.TEXT, message_handler))
     application.add_handler(MessageHandler(filters.LOCATION, location_handler))
+    application.add_handler(CallbackQueryHandler(bus_stop_handler, pattern=r"\d{5}"))
     application.add_handler(
-        CallbackQueryHandler(bus_stop_handler(bus_service_adapter), pattern=r"\d{5}")
-    )
-    application.add_handler(
-        CallbackQueryHandler(
-            route_direction_handler(bus_service_adapter), pattern=r"\d{1,3}\w?\,[12]"
-        )
+        CallbackQueryHandler(route_direction_handler, pattern=r"\d{1,3}\w?\,[12]")
     )
     # settings
     register_settings_handlers(application)
