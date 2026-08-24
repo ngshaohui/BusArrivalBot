@@ -16,6 +16,6 @@ dependencies = [
 dev = [
     "freezegun>=1.5.5",
     "pytest>=8.4.2",
-    "ruff>=0.12.7",
+    "ruff>=0.16.4",
     "ty>=0.0.74",
 ]
