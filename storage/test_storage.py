@@ -3,6 +3,7 @@ https://www.sqlite.org/inmemorydb.html
 """
 
 import unittest
+
 from .adapter import StorageUtility
 
 

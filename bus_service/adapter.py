@@ -2,9 +2,10 @@
 composes functions to give enhanced output
 """
 
-from typing import Callable
+from collections.abc import Callable
 
 from utils.custom_typings import BusRoute, BusStop
+
 from .bus_route import bus_route_utility
 from .bus_stops import bus_stop_utility
 

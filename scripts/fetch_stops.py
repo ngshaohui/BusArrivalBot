@@ -1,12 +1,12 @@
 # Run this script to get an updated all_stops.json
 
-from functools import reduce
 import hashlib
 import json
 import logging
+from functools import reduce
 
-from decouple import config
 import requests
+from decouple import config
 
 from utils.custom_typings import BusStop
 
@@ -37,8 +37,7 @@ def bus_stops_checksum(stops: list[BusStop]) -> str:
     calculate checksum of list of stops
     """
     # no need to sort first since we rely on xor
-    stop_hash_bytes_ls = list(map(lambda x: get_stop_hash(x), stops))
-    checksum_bytes = reduce(xor_bytes, stop_hash_bytes_ls)
+    checksum_bytes = reduce(xor_bytes, map(get_stop_hash, stops))
     return checksum_bytes.hex()
 
 

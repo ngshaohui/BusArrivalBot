@@ -1,11 +1,11 @@
 # Run this script to get an updated routes.json
 
-from functools import reduce
 import hashlib
 import json
 import logging
-import requests
+from functools import reduce
 
+import requests
 from decouple import config
 
 from utils.custom_typings import BusRoute
@@ -20,7 +20,7 @@ def get_route_hash(stop: BusRoute) -> bytes:
     calculate hash digest from a string
     """
     msg = hashlib.sha3_256()
-    str_values = map(lambda x: str(x).encode(), stop.values())
+    str_values = (str(attr).encode() for attr in stop.values())
     for val in str_values:
         msg.update(val)
     return msg.digest()
@@ -35,8 +35,7 @@ def bus_routes_checksum(stops: list[BusRoute]) -> str:
     calculate checksum of list of stops
     """
     # no need to sort first since we rely on xor
-    stop_hash_bytes_ls = list(map(lambda x: get_route_hash(x), stops))
-    checksum_bytes = reduce(xor_bytes, stop_hash_bytes_ls)
+    checksum_bytes = reduce(xor_bytes, map(get_route_hash, stops))
     return checksum_bytes.hex()
 
 

@@ -1,9 +1,13 @@
 import logging
 import sqlite3
 
-from storage.initialize import init
+from .initialize import init
 
 logger = logging.getLogger(__name__)
+
+
+class StorageUtilityTableError(Exception):
+    pass
 
 
 # TODO use constant for table name
@@ -21,8 +25,9 @@ class StorageUtility:
         else:
             logger.info("Using specified database file")
             self.con = con
+
         if not has_init_tables(self.con):
-            raise Exception("Database has not been initialized")
+            raise StorageUtilityTableError("Table not initialized in DB")
 
     def check_user_exists(self, chat_id: int) -> bool:
         """
@@ -83,12 +88,11 @@ class StorageUtility:
                 (chat_id, saved_stops_str),
             )
             self.con.commit()
+            return True
         except sqlite3.Error as e:
             # TODO handle error
             print(f"SQLite error: {e}")
             return False
-        finally:
-            return True
 
     def save_stop(self, chat_id: int, stop_id: str) -> bool:
         """
@@ -125,12 +129,11 @@ class StorageUtility:
                 (chat_id,),
             )
             self.con.commit()
+            return True
         except sqlite3.Error as e:
             # TODO handle error
             print(f"SQLite error: {e}")
             return False
-        finally:
-            return True
 
 
 def has_init_tables(conn: sqlite3.Connection) -> bool:

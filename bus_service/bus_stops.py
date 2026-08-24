@@ -1,9 +1,10 @@
 import re
-from typing import Callable
+from collections.abc import Callable
 
 from scipy.spatial import KDTree
 
 from utils.custom_typings import BusStop, Coordinate
+
 from .bus_stop_search_map import transform_query_token
 
 type GetNearestStops = Callable[[Coordinate, int], list[BusStop]]
@@ -64,7 +65,7 @@ def bus_stop_utility(
         """
         get a list of bus stops that match a search query
         """
-        query_tokens = map(lambda x: x.lower(), query)
+        query_tokens = (token.lower() for token in query)
         m_query_tokens = map(transform_query_token, query_tokens)
         stop_ids_set: set[str] = set()
 

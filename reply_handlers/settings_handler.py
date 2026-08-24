@@ -8,7 +8,6 @@ from storage.adapter import StorageUtility
 from utils.bot_utils import get_chat_id
 from utils.constants import SETTINGS_ACTIONS
 
-
 BACK_TO_SETTINGS_BUTTON = [
     InlineKeyboardButton("Back to settings", callback_data=SETTINGS_ACTIONS.SHOW.value)
 ]
@@ -136,7 +135,6 @@ Allow the bot to store your settings data?"""
         await update.callback_query.edit_message_text(
             text=text, reply_markup=reply_markup
         )
-    return
 
 
 async def show_settings_handler(

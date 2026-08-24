@@ -1,18 +1,18 @@
+import time
 from collections import OrderedDict
 from dataclasses import dataclass, field
-import time
-from typing import Generic, NamedTuple, TypeVar
+from typing import NamedTuple, TypeVar
 
 T = TypeVar("T")
 
 
-class CacheItem(NamedTuple, Generic[T]):
+class CacheItem[T](NamedTuple):
     value: T
     expiry: int
 
 
 @dataclass
-class LRUCache(Generic[T]):
+class LRUCache[T]:
     item_cache: OrderedDict[str, CacheItem[T]] = field(default_factory=OrderedDict)
     ttl: int = 20  # time in seconds
     item_limit: int = 100

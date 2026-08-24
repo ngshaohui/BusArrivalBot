@@ -1,5 +1,5 @@
-from freezegun import freeze_time
 import pytest
+from freezegun import freeze_time
 
 from .lru_cache import LRUCache
 

@@ -3,6 +3,10 @@ import sqlite3
 TABLE_NAME = "saved_stops"
 
 
+class StorageUtilityInitError(Exception):
+    pass
+
+
 def init(con: sqlite3.Connection):
     try:
         cur = con.cursor()
@@ -14,7 +18,7 @@ def init(con: sqlite3.Connection):
         """)
         con.commit()
     except sqlite3.Error as e:
-        raise Exception("Encountered error while initializing DB", e)
+        raise StorageUtilityInitError("Encountered error while initializing DB", e)
 
 
 def main():
@@ -36,7 +40,7 @@ def populate_dummy():
         )
         con.commit()
     except sqlite3.Error as e:
-        raise Exception("Encountered error while populating DB", e)
+        raise StorageUtilityInitError("Encountered error while populating DB", e)
     finally:
         con.close()
 

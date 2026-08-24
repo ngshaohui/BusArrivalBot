@@ -2,7 +2,7 @@
 search for bus stops within a route
 """
 
-from typing import Callable
+from collections.abc import Callable
 
 from bus_service.bus_stops import GetStopInfo
 from utils.custom_typings import BusRoute, BusStop

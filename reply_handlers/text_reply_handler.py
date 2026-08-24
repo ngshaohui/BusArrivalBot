@@ -1,18 +1,18 @@
-from bot_app_state import get_app_state
 import re
 import time
 
 from telegram import InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
+from bot_app_state import get_app_state
 from bus_service.adapter import GetRouteStops
 from bus_service.bus_arrival import get_arriving_busses
 from bus_service.bus_stops import GetStopInfo, SearchPossibleStops
 from format_message import bus_route_msg, bus_stop_search_msg, next_bus_msg
 from reply_handlers.settings_handler import save_stop
 from saved_stops import list_saved_stops
-from .inline_buttons import make_change_route_btn, make_refresh_button
 
+from .inline_buttons import make_change_route_btn, make_refresh_button
 
 # 34120
 # /29125
@@ -54,6 +54,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         bus_number = match.group(1)
         await bus_route(app_state.bus_service.get_route_stops, update, bus_number)
     elif match := re.match(REGEX_ROUTE, msg, re.IGNORECASE):
+        # TODO can deprecate this command
         bus_number = match.group(1)
         await bus_route(app_state.bus_service.get_route_stops, update, bus_number)
     elif match := re.match(REGEX_SEARCH, msg, re.IGNORECASE):

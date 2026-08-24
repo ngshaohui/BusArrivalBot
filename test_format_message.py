@@ -1,6 +1,7 @@
 import unittest
+
 from format_message import bus_stop_search_msg, next_bus_msg
-from utils.custom_typings import BusStop, BusInfo
+from utils.custom_typings import BusInfo, BusStop
 
 STOPS: list[BusStop] = [
     {

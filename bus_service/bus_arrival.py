@@ -1,9 +1,9 @@
-from datetime import datetime
 import logging
 import time
+from datetime import datetime
 
-from decouple import config
 import requests
+from decouple import config
 
 from utils.custom_typings import BusArrivalServiceResponse, BusInfo, TimestampISO8601
 from utils.lru_cache import LRUCache

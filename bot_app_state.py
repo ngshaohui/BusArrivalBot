@@ -1,7 +1,9 @@
+from dataclasses import dataclass
+
 from telegram.ext import Application
+
 from bus_service.adapter import BusServiceAdapter
 from storage.adapter import StorageUtility
-from dataclasses import dataclass
 
 STATE_KEY = "appstate"
 

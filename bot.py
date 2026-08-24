@@ -1,4 +1,3 @@
-from bot_app_state import AppState, register_app_state, get_app_state
 import json
 import logging
 
@@ -14,8 +13,8 @@ from telegram.ext import (
     filters,
 )
 
+from bot_app_state import AppState, get_app_state, register_app_state
 from bus_service.adapter import BusServiceAdapter
-from utils.custom_typings import BusRoute, BusStop
 from reply_handlers.callback_query_handler import (
     bus_stop_handler,
     route_direction_handler,
@@ -28,6 +27,7 @@ from reply_handlers.settings_handler import (
 from reply_handlers.text_reply_handler import message_handler
 from scripts import fetch_routes, fetch_stops
 from storage.adapter import StorageUtility
+from utils.custom_typings import BusRoute, BusStop
 
 # Enable logging
 logging.basicConfig(

@@ -1,6 +1,5 @@
 from typing import TypedDict
 
-
 type Coordinate = tuple[float, float]
 type TimestampISO8601 = str  # "2024-11-26T22:04:48+08:00"
 

@@ -1,7 +1,9 @@
 import random
 import unittest
-from .bus_stops import bus_stop_utility
+
 from utils.custom_typings import BusStop
+
+from .bus_stops import bus_stop_utility
 
 STOPS: list[BusStop] = [
     {
@@ -57,7 +59,7 @@ class TestGetNearestStop(unittest.TestCase):
             random.shuffle(STOPS)
             get_nearest_stops, _, _ = bus_stop_utility(STOPS)
             nearest_stops = get_nearest_stops(COORD, 5)
-            stop_codes = list(map(lambda x: x["BusStopCode"], nearest_stops))
+            stop_codes = [stop["BusStopCode"] for stop in nearest_stops]
             self.assertEqual(stop_codes, NEAREST_STOP_CODES)
 
 
