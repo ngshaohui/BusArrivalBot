@@ -1,17 +1,16 @@
+from bot_app_state import get_app_state
 import re
 import time
-from typing import Callable
 
 from telegram import InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
-from bus_service.adapter import BusServiceAdapter, GetRouteStops
+from bus_service.adapter import GetRouteStops
 from bus_service.bus_arrival import get_arriving_busses
 from bus_service.bus_stops import GetStopInfo, SearchPossibleStops
 from format_message import bus_route_msg, bus_stop_search_msg, next_bus_msg
 from reply_handlers.settings_handler import save_stop
 from saved_stops import list_saved_stops
-from storage.adapter import StorageUtility
 from .inline_buttons import make_change_route_btn, make_refresh_button
 
 
@@ -37,46 +36,45 @@ REGEX_ADD_STOP = r"\/?save[?:\s*|_](\d{5})"
 REGEX_LIST_SAVED_STOPS = r"\/?list"
 
 
-def message_handler(
-    bus_service_adapter: BusServiceAdapter, storage_utility: StorageUtility
-) -> Callable:
-    async def reply(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-        """
-        parse all text that the user sends
+async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """
+    parse all text that the user sends
 
-        this function then sends the request to the specific handler
-        """
-        if update.message is None or update.message.text is None:
-            return
-        msg = update.message.text
+    this function then sends the request to the specific handler
+    """
+    if update.message is None or update.message.text is None:
+        return
+    msg = update.message.text
+    app_state = get_app_state(context.application)
 
-        if match := re.match(REGEX_STOP_CODE, msg):
-            stop_code = match.group(1)
-            await bus_stop_code(bus_service_adapter.get_stop_info, update, stop_code)
-        elif match := re.match(REGEX_BUS_NUM, msg, re.IGNORECASE):
-            bus_number = match.group(1)
-            await bus_route(bus_service_adapter.get_route_stops, update, bus_number)
-        elif match := re.match(REGEX_ROUTE, msg, re.IGNORECASE):
-            bus_number = match.group(1)
-            await bus_route(bus_service_adapter.get_route_stops, update, bus_number)
-        elif match := re.match(REGEX_SEARCH, msg, re.IGNORECASE):
-            query_str = match.group(1)
-            query: list[str] = re.split(r"[\s\/\-]", query_str)
-            await search(bus_service_adapter.search_possible_stops, update, query)
-        elif match := re.match(REGEX_ADD_STOP, msg, re.IGNORECASE):
-            stop_code = match.group(1)
-            await save_stop(
-                storage_utility, bus_service_adapter.get_stop_info, update, stop_code
-            )
-        elif re.match(REGEX_LIST_SAVED_STOPS, msg, re.IGNORECASE) is not None:
-            await list_saved_stops(
-                storage_utility, bus_service_adapter.get_stop_info, update
-            )
-        else:
-            # unknown command message
-            await unknown_command(update)
-
-    return reply
+    if match := re.match(REGEX_STOP_CODE, msg):
+        stop_code = match.group(1)
+        await bus_stop_code(app_state.bus_service.get_stop_info, update, stop_code)
+    elif match := re.match(REGEX_BUS_NUM, msg, re.IGNORECASE):
+        bus_number = match.group(1)
+        await bus_route(app_state.bus_service.get_route_stops, update, bus_number)
+    elif match := re.match(REGEX_ROUTE, msg, re.IGNORECASE):
+        bus_number = match.group(1)
+        await bus_route(app_state.bus_service.get_route_stops, update, bus_number)
+    elif match := re.match(REGEX_SEARCH, msg, re.IGNORECASE):
+        query_str = match.group(1)
+        query: list[str] = re.split(r"[\s\/\-]", query_str)
+        await search(app_state.bus_service.search_possible_stops, update, query)
+    elif match := re.match(REGEX_ADD_STOP, msg, re.IGNORECASE):
+        stop_code = match.group(1)
+        await save_stop(
+            app_state.storage_utility,
+            app_state.bus_service.get_stop_info,
+            update,
+            stop_code,
+        )
+    elif re.match(REGEX_LIST_SAVED_STOPS, msg, re.IGNORECASE) is not None:
+        await list_saved_stops(
+            app_state.storage_utility, app_state.bus_service.get_stop_info, update
+        )
+    else:
+        # unknown command message
+        await unknown_command(update)
 
 
 async def bus_stop_code(

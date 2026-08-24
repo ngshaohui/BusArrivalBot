@@ -141,11 +141,7 @@ def main() -> None:
     application.add_handler(CommandHandler("settings", show_settings_handler))
 
     # on non command i.e message
-    application.add_handler(
-        MessageHandler(
-            filters.TEXT, message_handler(bus_service_adapter, storage_utility)
-        )
-    )
+    application.add_handler(MessageHandler(filters.TEXT, message_handler))
     application.add_handler(MessageHandler(filters.LOCATION, location_handler))
     application.add_handler(
         CallbackQueryHandler(bus_stop_handler(bus_service_adapter), pattern=r"\d{5}")
