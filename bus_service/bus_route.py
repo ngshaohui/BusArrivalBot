@@ -30,7 +30,7 @@ def bus_route_utility(
 
         returns a list of BusStopCode
         """
-        return bus_route_map.get((bus_number, direction), None)
+        return bus_route_map.get((bus_number, direction))
 
     def get_route_stops(bus_number: str, direction: int) -> list[BusStop] | None:
         """

@@ -19,9 +19,7 @@ def bus_stop_utility(
     TODO usage instructions
     """
     # convert [{"Latitude": 1, "Longitude": 130}] -> [(1, 130)]
-    stop_coordinates = tuple(
-        map(lambda stop: (stop["Latitude"], stop["Longitude"]), stops)
-    )
+    stop_coordinates = [(stop["Latitude"], stop["Longitude"]) for stop in stops]
     kd_tree = KDTree(stop_coordinates)
 
     def get_nearest_stops(coord: Coordinate, num_stops: int = 3) -> list[BusStop]:
@@ -35,13 +33,13 @@ def bus_stop_utility(
         return nearest_stops
 
     # create dictionary with BusStopCode as key and BusStop as value
-    stops_map = dict(zip(map(lambda x: x["BusStopCode"], stops), stops))
+    stops_map = dict(zip([stop["BusStopCode"] for stop in stops], stops))
 
     def get_stop_info(bus_stop_code: str) -> BusStop | None:
         """
         obtain BusStop information for a given bus stop code
         """
-        return stops_map.get(bus_stop_code, None)
+        return stops_map.get(bus_stop_code)
 
     def create_token_map(stops: list[BusStop]) -> dict[str, set[str]]:
         """
