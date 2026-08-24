@@ -1,6 +1,6 @@
+from bot_app_state import AppState, register_app_state, get_app_state
 import json
 import logging
-from typing import Callable
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from decouple import config
@@ -64,31 +64,25 @@ You can also send your location to find the nearest stops!
     )
 
 
-def location_handler(bus_service_adapter: BusServiceAdapter) -> Callable:
-    """
-    send prompt for users to select nearest bus stop (out of 3 candidates)
-    """
+async def location_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # workaround: pylint error suppression
+    if update.message is None or update.message.location is None:
+        return
+    # get nearest stops
+    latitude = update.message.location.latitude
+    longitude = update.message.location.longitude
+    app_state = get_app_state(context.application)
+    nearest_stops: list[BusStop] = app_state.bus_service.get_nearest_stops(
+        (latitude, longitude), 3
+    )
 
-    async def location(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-        # workaround: pylint error suppression
-        if update.message is None or update.message.location is None:
-            return
-        # get nearest stops
-        latitude = update.message.location.latitude
-        longitude = update.message.location.longitude
-        nearest_stops: list[BusStop] = bus_service_adapter.get_nearest_stops(
-            (latitude, longitude), 3
-        )
+    # build keyboard
+    keyboard = list(map(get_stop_inline_button, nearest_stops))
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-        # build keyboard
-        keyboard = list(map(get_stop_inline_button, nearest_stops))
-        reply_markup = InlineKeyboardMarkup(keyboard)
-
-        await update.message.reply_text(
-            "Here are the 3 closest bus stops:", reply_markup=reply_markup
-        )
-
-    return location
+    await update.message.reply_text(
+        "Here are the 3 closest bus stops:", reply_markup=reply_markup
+    )
 
 
 def fetch_stops_and_routes(
@@ -99,8 +93,8 @@ def fetch_stops_and_routes(
     """
     if development_mode:
         with open("bus_stops.json") as f1, open("bus_routes.json") as f2:
-            bus_stops: list[BusStop] = json.load(f1)
-            bus_routes: list[BusRoute] = json.load(f2)
+            bus_stops: list[BusStop] = json.load(f1)["bus_stops"]
+            bus_routes: list[BusRoute] = json.load(f2)["bus_routes"]
         logger.info("Load data from local filesystem")
     else:
         bus_stops = fetch_stops.run()
@@ -139,6 +133,7 @@ def main() -> None:
 
     # Create the Application and pass it your bot's token.
     application = Application.builder().token(config("BOT_TOKEN", cast=str)).build()
+    register_app_state(application, AppState(bus_service_adapter, storage_utility))
 
     # on different commands
     application.add_handler(CommandHandler("start", start))
@@ -153,9 +148,7 @@ def main() -> None:
             filters.TEXT, message_handler(bus_service_adapter, storage_utility)
         )
     )
-    application.add_handler(
-        MessageHandler(filters.LOCATION, location_handler(bus_service_adapter))
-    )
+    application.add_handler(MessageHandler(filters.LOCATION, location_handler))
     application.add_handler(
         CallbackQueryHandler(bus_stop_handler(bus_service_adapter), pattern=r"\d{5}")
     )
