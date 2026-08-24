@@ -138,9 +138,7 @@ def main() -> None:
     # on different commands
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", start))
-    application.add_handler(
-        CommandHandler("settings", show_settings_handler(storage_utility))
-    )
+    application.add_handler(CommandHandler("settings", show_settings_handler))
 
     # on non command i.e message
     application.add_handler(
@@ -158,7 +156,7 @@ def main() -> None:
         )
     )
     # settings
-    register_settings_handlers(application, bus_service_adapter, storage_utility)
+    register_settings_handlers(application)
 
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)

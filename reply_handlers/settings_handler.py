@@ -1,10 +1,8 @@
-from typing import Callable
-
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.error import BadRequest
 from telegram.ext import Application, CallbackQueryHandler, ContextTypes
 
-from bus_service.adapter import BusServiceAdapter
+from bot_app_state import get_app_state
 from bus_service.bus_stops import GetStopInfo
 from storage.adapter import StorageUtility
 from utils.bot_utils import get_chat_id
@@ -51,76 +49,64 @@ SETTINGS_REVOKE_CONSENT_KEYBOARD = [
 ]
 
 
-def settings_consent_handler(storage_utility: StorageUtility) -> Callable:
+async def settings_consent_handler(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """
-    handle settings consent
+    handle user granting consent
     """
+    chat_id = get_chat_id(update, context)
+    if not chat_id:
+        return  # ignore malformed requests
 
-    async def settings_consent(
-        update: Update, context: ContextTypes.DEFAULT_TYPE
-    ) -> None:
-        chat_id = get_chat_id(update, context)
-        if not chat_id:
-            return  # ignore malformed requests
-        storage_utility.save_stops(chat_id, [])
-        settings_handler = show_settings_handler(storage_utility)
-        await settings_handler(update, context)
-
-    return settings_consent
+    app_state = get_app_state(context.application)
+    app_state.storage_utility.save_stops(chat_id, [])
+    await show_settings_handler(update, context)
 
 
-def revoke_consent_confirmation_handler() -> Callable:
-    """
-    handle confirmation to revoke settings consent
-    """
+async def revoke_consent_confirmation_handler(
+    update: Update, _: ContextTypes.DEFAULT_TYPE
+) -> None:
+    query = update.callback_query
+    if query is None or query.data is None:
+        return  # ignore malformed requests
 
-    async def settings_consent_revoke_confirmation(
-        update: Update, _: ContextTypes.DEFAULT_TYPE
-    ) -> None:
-        query = update.callback_query
-        if query is None or query.data is None:
-            return  # ignore malformed requests
-
-        # confirm revocation of consent
-        reply_msg = """Are you sure you want to revoke data storage consent?
+    # confirm revocation of consent
+    reply_msg = """Are you sure you want to revoke data storage consent?
 This will delete your saved stops.
 
 This action is irreversible."""
-        reply_markup = InlineKeyboardMarkup(SETTINGS_REVOKE_CONSENT_KEYBOARD)
+    reply_markup = InlineKeyboardMarkup(SETTINGS_REVOKE_CONSENT_KEYBOARD)
 
-        await query.answer()
-        try:
-            await query.edit_message_text(text=reply_msg, reply_markup=reply_markup)
-        except BadRequest:
-            # ignore errors due to same message being sent
-            pass
-
-    return settings_consent_revoke_confirmation
+    await query.answer()
+    try:
+        await query.edit_message_text(text=reply_msg, reply_markup=reply_markup)
+    except BadRequest:
+        # ignore errors due to same message being sent
+        pass
 
 
-def revoke_consent_handler(storage_utility: StorageUtility) -> Callable:
+async def revoke_consent_handler(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """
-    handle removing settings consent
+    handle user removing settings consent
     """
+    query = update.callback_query
+    chat_id = context._chat_id
+    if query is None or query.data is None or chat_id is None:
+        return
 
-    async def settings_consent_revoke(
-        update: Update, context: ContextTypes.DEFAULT_TYPE
-    ) -> None:
-        query = update.callback_query
-        chat_id = context._chat_id
-        if query is None or query.data is None or chat_id is None:
-            return
-        storage_utility.remove_user(chat_id)
+    app_state = get_app_state(context.application)
+    app_state.storage_utility.remove_user(chat_id)
 
-        reply_msg = "User configuration settings will not be stored."
-        await query.answer()
-        try:
-            await query.edit_message_text(text=reply_msg)
-        except BadRequest:
-            # ignore errors due to same message being sent
-            pass
-
-    return settings_consent_revoke
+    reply_msg = "User configuration settings will not be stored."
+    await query.answer()
+    try:
+        await query.edit_message_text(text=reply_msg)
+    except BadRequest:
+        # ignore errors due to same message being sent
+        pass
 
 
 async def settings_not_enabled_message(update: Update) -> None:
@@ -153,29 +139,30 @@ Allow the bot to store your settings data?"""
     return
 
 
-def show_settings_handler(storage_utility: StorageUtility) -> Callable:
-    async def show_settings(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """
-        TODO handle scenario where stops exist or don't exist already
-        """
-        chat_id = get_chat_id(update, context)
-        if chat_id is None:
-            return  # ignore malformed requests
-        user_exists = storage_utility.check_user_exists(chat_id)
-        if not user_exists:
-            return await ask_consent(update, context)
+async def show_settings_handler(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """
+    TODO handle scenario where stops exist or don't exist already
+    """
+    chat_id = get_chat_id(update, context)
+    if chat_id is None:
+        return  # ignore malformed requests
 
-        text = "Choose an option from the list below:"
-        reply_markup = InlineKeyboardMarkup(SETTINGS_KEYBOARD)
-        if update.message is not None:
-            await update.message.reply_text(text=text, reply_markup=reply_markup)
-        elif update.callback_query is not None:
-            await update.callback_query.answer()
-            await update.callback_query.edit_message_text(
-                text=text, reply_markup=reply_markup
-            )
+    app_state = get_app_state(context.application)
+    user_exists = app_state.storage_utility.check_user_exists(chat_id)
+    if not user_exists:
+        return await ask_consent(update, context)
 
-    return show_settings
+    text = "Choose an option from the list below:"
+    reply_markup = InlineKeyboardMarkup(SETTINGS_KEYBOARD)
+    if update.message is not None:
+        await update.message.reply_text(text=text, reply_markup=reply_markup)
+    elif update.callback_query is not None:
+        await update.callback_query.answer()
+        await update.callback_query.edit_message_text(
+            text=text, reply_markup=reply_markup
+        )
 
 
 async def save_stop(
@@ -224,90 +211,87 @@ def __make_saved_stops_list(
     return buttons
 
 
-def remove_flow_handler(
-    storage_utility: StorageUtility, get_stop_info: GetStopInfo
-) -> Callable:
-    async def remove_flow(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """
-        TODO handle scenario where stops exist or don't exist already
-        """
-        query = update.callback_query
-        chat_id = get_chat_id(update, context)
-        if query is None or query.data is None or chat_id is None:
-            # ignore malformed requests
-            return
+async def remove_flow_handler(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """
+    TODO handle scenario where stops exist or don't exist already
+    """
+    query = update.callback_query
+    chat_id = get_chat_id(update, context)
+    if query is None or query.data is None or chat_id is None:
+        # ignore malformed requests
+        return
 
-        user_exists = storage_utility.check_user_exists(chat_id)
-        if not user_exists:
-            return await settings_not_enabled_message(update)
+    app_state = get_app_state(context.application)
+    user_exists = app_state.storage_utility.check_user_exists(chat_id)
+    if not user_exists:
+        return await settings_not_enabled_message(update)
 
-        saved_stops = storage_utility.get_saved_stops(chat_id)
-        if len(saved_stops) > 0:
-            text = "Remove a stop from the list below:"
-        else:
-            text = "List is empty."
-        callback_buttons = __make_saved_stops_list(
-            get_stop_info, saved_stops, SETTINGS_ACTIONS.REMOVE
-        ) + [BACK_TO_SETTINGS_BUTTON]
-        reply_markup = InlineKeyboardMarkup(callback_buttons)
-        await query.answer()
-        await query.edit_message_text(text=text, reply_markup=reply_markup)
-
-    return remove_flow
-
-
-def remove_handler(
-    storage_utility: StorageUtility, get_stop_info: GetStopInfo
-) -> Callable:
-    async def remove_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """
-        TODO handle scenario where stops exist or don't exist already
-        """
-        query = update.callback_query
-        chat_id = context._chat_id
-        if query is None or query.data is None or chat_id is None:
-            # ignore malformed requests
-            return
-
-        user_exists = storage_utility.check_user_exists(chat_id)
-        if not user_exists:
-            return await settings_not_enabled_message(update)
-
-        stop_id = query.data.split(",")[1]
-        storage_utility.remove_stop(chat_id, stop_id)
-
-        remove_flow = remove_flow_handler(storage_utility, get_stop_info)
-        await remove_flow(update, context)
-
-    return remove_stop
+    saved_stops = app_state.storage_utility.get_saved_stops(chat_id)
+    if len(saved_stops) > 0:
+        text = "Remove a stop from the list below:"
+    else:
+        text = "List is empty."
+    callback_buttons = __make_saved_stops_list(
+        app_state.bus_service.get_stop_info,
+        saved_stops,
+        SETTINGS_ACTIONS.REMOVE,
+    ) + [BACK_TO_SETTINGS_BUTTON]
+    reply_markup = InlineKeyboardMarkup(callback_buttons)
+    await query.answer()
+    await query.edit_message_text(text=text, reply_markup=reply_markup)
 
 
-def reorder_flow_handler(
-    storage_utility: StorageUtility, get_stop_info: GetStopInfo
-) -> Callable:
-    async def reorder_flow(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """
-        TODO handle scenario where stops exist or don't exist already
-        """
-        query = update.callback_query
-        chat_id = get_chat_id(update, context)
-        if query is None or query.data is None or chat_id is None:
-            return  # ignore malformed requests
+async def remove_stop_handler(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """
+    TODO handle scenario where stops exist or don't exist already
+    """
+    query = update.callback_query
+    chat_id = context._chat_id
+    if query is None or query.data is None or chat_id is None:
+        # ignore malformed requests
+        return
 
-        user_exists = storage_utility.check_user_exists(chat_id)
-        if not user_exists:
-            return await settings_not_enabled_message(update)
+    app_state = get_app_state(context.application)
+    user_exists = app_state.storage_utility.check_user_exists(chat_id)
+    if not user_exists:
+        return await settings_not_enabled_message(update)
 
-        saved_stops = storage_utility.get_saved_stops(chat_id)
-        text = "Select a stop to reorder from the list below:"
-        callback_buttons = __make_saved_stops_list(
-            get_stop_info, saved_stops, SETTINGS_ACTIONS.REORDER_SELECT
-        ) + [BACK_TO_SETTINGS_BUTTON]
-        reply_markup = InlineKeyboardMarkup(callback_buttons)
-        await query.answer()
-        await query.edit_message_text(text=text, reply_markup=reply_markup)
+    stop_id = query.data.split(",")[1]
+    app_state.storage_utility.remove_stop(chat_id, stop_id)
 
-    return reorder_flow
+    await remove_flow_handler(update, context)
+
+
+async def reorder_flow_handler(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """
+    TODO handle scenario where stops exist or don't exist already
+    """
+    query = update.callback_query
+    chat_id = get_chat_id(update, context)
+    if query is None or query.data is None or chat_id is None:
+        return  # ignore malformed requests
+
+    app_state = get_app_state(context.application)
+    user_exists = app_state.storage_utility.check_user_exists(chat_id)
+    if not user_exists:
+        return await settings_not_enabled_message(update)
+
+    saved_stops = app_state.storage_utility.get_saved_stops(chat_id)
+    text = "Select a stop to reorder from the list below:"
+    callback_buttons = __make_saved_stops_list(
+        app_state.bus_service.get_stop_info,
+        saved_stops,
+        SETTINGS_ACTIONS.REORDER_SELECT,
+    ) + [BACK_TO_SETTINGS_BUTTON]
+    reply_markup = InlineKeyboardMarkup(callback_buttons)
+    await query.answer()
+    await query.edit_message_text(text=text, reply_markup=reply_markup)
 
 
 def __make_reorder_keyboard(stop_id: str, position: int) -> InlineKeyboardMarkup:
@@ -350,43 +334,41 @@ def __get_reorder_list_message(
     return msg
 
 
-def reorder_select_handler(
-    storage_utility: StorageUtility, get_stop_info: GetStopInfo
-) -> Callable:
-    async def reorder_select(
-        update: Update, context: ContextTypes.DEFAULT_TYPE
-    ) -> None:
-        """
-        TODO handle scenario where stops exist or don't exist already
-        """
-        query = update.callback_query
-        chat_id = context._chat_id
-        if query is None or query.data is None or chat_id is None:
-            return  # ignore malformed requests
+async def reorder_select_handler(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """
+    TODO handle scenario where stops exist or don't exist already
+    """
+    query = update.callback_query
+    chat_id = context._chat_id
+    if query is None or query.data is None or chat_id is None:
+        return  # ignore malformed requests
 
-        user_exists = storage_utility.check_user_exists(chat_id)
-        if not user_exists:
-            return await settings_not_enabled_message(update)
+    app_state = get_app_state(context.application)
+    user_exists = app_state.storage_utility.check_user_exists(chat_id)
+    if not user_exists:
+        return await settings_not_enabled_message(update)
 
-        selected_stop_id = query.data.split(",")[1]
+    selected_stop_id = query.data.split(",")[1]
 
-        saved_stops = storage_utility.get_saved_stops(chat_id)
-        try:
-            idx = saved_stops.index(selected_stop_id)
-            text = __get_reorder_list_message(get_stop_info, saved_stops, idx)
-            reply_markup = __make_reorder_keyboard(selected_stop_id, idx)
-            await query.answer()
-            await query.edit_message_text(text, reply_markup=reply_markup)
+    saved_stops = app_state.storage_utility.get_saved_stops(chat_id)
+    try:
+        idx = saved_stops.index(selected_stop_id)
+        text = __get_reorder_list_message(
+            app_state.bus_service.get_stop_info, saved_stops, idx
+        )
+        reply_markup = __make_reorder_keyboard(selected_stop_id, idx)
+        await query.answer()
+        await query.edit_message_text(text, reply_markup=reply_markup)
 
-        except ValueError:
-            text = "Data for this message is outdated. Please use /settings for the latest data."
-            await query.answer()
-            await query.edit_message_text(text)
+    except ValueError:
+        text = "Data for this message is outdated. Please use /settings for the latest data."
+        await query.answer()
+        await query.edit_message_text(text)
 
-        except BadRequest:
-            pass  # ignore errors due to same message being sent
-
-    return reorder_select
+    except BadRequest:
+        pass  # ignore errors due to same message being sent
 
 
 def __reorder_stops_list(saved_stops: list[str], pos: int, dir: str) -> list[str]:
@@ -407,97 +389,92 @@ def __reorder_stops_list(saved_stops: list[str], pos: int, dir: str) -> list[str
     return ls
 
 
-def reorder_handler(
-    storage_utility: StorageUtility, get_stop_info: GetStopInfo
-) -> Callable:
-    async def reorder_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """
-        TODO handle scenario where stops exist or don't exist already
-        """
-        query = update.callback_query
-        chat_id = context._chat_id
-        if query is None or query.data is None or chat_id is None:
-            # ignore malformed requests
-            return
+async def reorder_stop_handler(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """
+    TODO handle scenario where stops exist or don't exist already
+    """
+    query = update.callback_query
+    chat_id = context._chat_id
+    if query is None or query.data is None or chat_id is None:
+        # ignore malformed requests
+        return
 
-        user_exists = storage_utility.check_user_exists(chat_id)
-        if not user_exists:
-            return await settings_not_enabled_message(update)
+    app_state = get_app_state(context.application)
+    user_exists = app_state.storage_utility.check_user_exists(chat_id)
+    if not user_exists:
+        return await settings_not_enabled_message(update)
 
-        _, stop_id, position, direction = query.data.split(",")
-        saved_stops = storage_utility.get_saved_stops(chat_id)
-        # validate the stop exists at that position
-        if saved_stops[int(position)] != stop_id:
-            # TODO show error about invalid data
-            return
-        new_stops_order = __reorder_stops_list(saved_stops, int(position), direction)
-        storage_utility.save_stops(chat_id, new_stops_order)
+    _, stop_id, position, direction = query.data.split(",")
+    saved_stops = app_state.storage_utility.get_saved_stops(chat_id)
+    # validate the stop exists at that position
+    if saved_stops[int(position)] != stop_id:
+        # TODO show error about invalid data
+        return
+    new_stops_order = __reorder_stops_list(saved_stops, int(position), direction)
+    app_state.storage_utility.save_stops(chat_id, new_stops_order)
 
-        reorder_select = reorder_select_handler(storage_utility, get_stop_info)
-        await reorder_select(update, context)
-
-    return reorder_stop
+    await reorder_select_handler(update, context)
 
 
 def register_settings_handlers(
     application: Application,
-    bus_service_adapter: BusServiceAdapter,
-    storage_utility: StorageUtility,
 ) -> None:
     """
     register settings handlers
     """
     application.add_handler(
         CallbackQueryHandler(
-            show_settings_handler(storage_utility),
+            show_settings_handler,
             pattern=SETTINGS_ACTIONS.SHOW.value,
         )
     )
     application.add_handler(
         CallbackQueryHandler(
-            settings_consent_handler(storage_utility),
+            settings_consent_handler,
             pattern=SETTINGS_ACTIONS.CONSENT.value,
         )
     )
     application.add_handler(
         CallbackQueryHandler(
-            revoke_consent_confirmation_handler(),
+            revoke_consent_confirmation_handler,
             pattern=SETTINGS_ACTIONS.DECLINE_FLOW.value,
         )
     )
     application.add_handler(
         CallbackQueryHandler(
-            revoke_consent_handler(storage_utility),
+            revoke_consent_handler,
             pattern=SETTINGS_ACTIONS.DECLINE.value,
         )
     )
     application.add_handler(
         CallbackQueryHandler(
-            remove_flow_handler(storage_utility, bus_service_adapter.get_stop_info),
+            remove_flow_handler,
             pattern=SETTINGS_ACTIONS.REMOVE_FLOW.value,
         )
     )
     application.add_handler(
         CallbackQueryHandler(
-            remove_handler(storage_utility, bus_service_adapter.get_stop_info),
+            remove_stop_handler,
             pattern=rf"{SETTINGS_ACTIONS.REMOVE.value},\d{{5}}",
         )
     )
     application.add_handler(
         CallbackQueryHandler(
-            reorder_flow_handler(storage_utility, bus_service_adapter.get_stop_info),
+            reorder_flow_handler,
             pattern=SETTINGS_ACTIONS.REORDER_FLOW.value,
         )
     )
     application.add_handler(
         CallbackQueryHandler(
-            reorder_select_handler(storage_utility, bus_service_adapter.get_stop_info),
+            reorder_select_handler,
             pattern=rf"{SETTINGS_ACTIONS.REORDER_SELECT.value},\d{{5}}",
         )
     )
     application.add_handler(
         CallbackQueryHandler(
-            reorder_handler(storage_utility, bus_service_adapter.get_stop_info),
+            reorder_stop_handler,
             pattern=rf"{SETTINGS_ACTIONS.REORDER.value},\d{{5}},\d,[01]",
         )
     )

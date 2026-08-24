@@ -9,7 +9,7 @@ STATE_KEY = "appstate"
 @dataclass
 class AppState:
     bus_service: BusServiceAdapter
-    storage: StorageUtility
+    storage_utility: StorageUtility
 
 
 def register_app_state(application: Application, app_state: AppState) -> None:
