@@ -26,12 +26,10 @@ async def list_saved_stops(
         return await settings_not_enabled_message(update)
 
     saved_stops = storage_utility.get_saved_stops(chat_id)
-    stops_iterable = map(get_stop_info, saved_stops)
-    stops: list[BusStop] = []
+    stops: list[BusStop] = [
+        stop for stop in map(get_stop_info, saved_stops) if stop is not None
+    ]
     # TODO: indicate when a saved stop is no longer present
-    for stop in stops_iterable:
-        if stop is not None:
-            stops.append(stop)
 
     # build keyboard
     text = "Pick a list of saved stops from the list below"

@@ -26,8 +26,7 @@ class StorageUtility:
             logger.info("Using specified database file")
             self.con = con
 
-        if not has_init_tables(self.con):
-            raise StorageUtilityTableError("Table not initialized in DB")
+        raise_if_table_not_init(self.con)
 
     def check_user_exists(self, chat_id: int) -> bool:
         """
@@ -136,7 +135,7 @@ class StorageUtility:
             return False
 
 
-def has_init_tables(conn: sqlite3.Connection) -> bool:
+def raise_if_table_not_init(conn: sqlite3.Connection):
     """
     Return True if the database contains any user-created tables,
     ignoring SQLite internal tables.
@@ -146,6 +145,7 @@ def has_init_tables(conn: sqlite3.Connection) -> bool:
         SELECT name 
         FROM sqlite_master 
         WHERE type='table'
-          AND name NOT LIKE 'sqlite_%';
+          AND name = 'saved_stops';
     """)
-    return cursor.fetchone() is not None
+    if cursor.fetchone() is None:
+        raise StorageUtilityTableError("Table 'saved_stops' not initialized in DB")
