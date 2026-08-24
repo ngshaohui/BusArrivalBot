@@ -1,8 +1,7 @@
 import re
 from typing import Callable, Optional
 
-# workaround: pylance does not resolve cKDTree correctly
-from scipy.spatial import cKDTree as KDTree  # type: ignore[attr-defined]
+from scipy.spatial import KDTree
 
 from utils.custom_typings import BusStop, Coordinate
 from .bus_stop_search_map import transform_query_token
