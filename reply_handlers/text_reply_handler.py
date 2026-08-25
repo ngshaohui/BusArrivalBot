@@ -48,22 +48,22 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     msg_text = message.text
     app_state = get_app_state(context.application)
 
-    if match := re.match(REGEX_STOP_CODE, msg_text):
-        stop_code = match.group(1)
+    if m := re.match(REGEX_STOP_CODE, msg_text):
+        stop_code = m.group(1)
         await bus_stop_code(app_state.bus_service.get_stop_info, message, stop_code)
-    elif match := re.match(REGEX_BUS_NUM, msg_text, re.IGNORECASE):
-        bus_number = match.group(1)
+    elif m := re.match(REGEX_BUS_NUM, msg_text, re.IGNORECASE):
+        bus_number = m.group(1)
         await bus_route(app_state.bus_service.get_route_stops, message, bus_number)
-    elif match := re.match(REGEX_ROUTE, msg_text, re.IGNORECASE):
+    elif m := re.match(REGEX_ROUTE, msg_text, re.IGNORECASE):
         # TODO consider deprecating this command
-        bus_number = match.group(1)
+        bus_number = m.group(1)
         await bus_route(app_state.bus_service.get_route_stops, message, bus_number)
-    elif match := re.match(REGEX_SEARCH, msg_text, re.IGNORECASE):
-        query_str = match.group(1)
+    elif m := re.match(REGEX_SEARCH, msg_text, re.IGNORECASE):
+        query_str = m.group(1)
         query: list[str] = re.split(r"[\s\/\-]", query_str)
         await search(app_state.bus_service.search_possible_stops, message, query)
-    elif match := re.match(REGEX_ADD_STOP, msg_text, re.IGNORECASE):
-        stop_code = match.group(1)
+    elif m := re.match(REGEX_ADD_STOP, msg_text, re.IGNORECASE):
+        stop_code = m.group(1)
         await save_stop(
             app_state.storage_utility,
             app_state.bus_service.get_stop_info,
