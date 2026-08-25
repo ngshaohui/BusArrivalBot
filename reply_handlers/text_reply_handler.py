@@ -26,11 +26,11 @@ REGEX_ROUTE = r"\/?route\s*(\d{1,3}[A-Za-z]?)?"
 # search opp heavy
 # /search pei
 REGEX_SEARCH = r"\/?search\s*(.*)"
-# save 42071
-# /save 43099
-# save_01019
-# /save_59159
-REGEX_ADD_STOP = r"\/?save[?:\s*|_](\d{5})"
+# add 42071
+# /add 43099
+# add_01019
+# /add_59159
+REGEX_ADD_STOP = r"\/?add[?:\s*|_](\d{5})"
 # list
 # /list
 REGEX_LIST_SAVED_STOPS = r"\/?list"

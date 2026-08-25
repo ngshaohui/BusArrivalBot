@@ -55,7 +55,7 @@ View the list of bus routes along the bus stop with the bus number
 `170`
 
 Save the BusStopCode for quick access and view the list of saved stops with /list
-`save 08031`
+`add 08031`
 
 You can also send your location to find the nearest stops!
 
