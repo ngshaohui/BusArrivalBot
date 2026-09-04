@@ -46,31 +46,3 @@ def next_bus_msg(bus_stop: BusStop, services: list[BusInfo], cur_unix_time: int)
     arrivals = map(partial(bus_arrivals_msg, cur_unix_time=cur_unix_time), services)
     arrivals_text = "\n\n".join(arrivals)
     return f"{title}\n\n{arrivals_text}"
-
-
-def __format_result(bus_stop: BusStop) -> str:
-    return f"/{bus_stop['BusStopCode']} {bus_stop['Description']}"
-
-
-def bus_stop_search_msg(possible_stops: list[BusStop]) -> str:
-    """
-    display list of stops matching search query
-    """
-    if len(possible_stops) == 0:
-        return "No bus stops match the search query"
-    title = f"""Showing {min(20, len(possible_stops))} out of {
-        len(possible_stops)
-    } bus stop{"" if len(possible_stops) == 1 else "s"} matching the search query"""
-    stops = map(__format_result, possible_stops[:20])
-    stops_text = "\n".join(stops)
-    return f"{title}\n\n{stops_text}"
-
-
-def bus_route_msg(bus_number: str, stops: list[BusStop]) -> str:
-    """
-    display list of stops within a bus route
-    """
-    title = f"Route for bus {bus_number}"
-    stops_text_ls = map(__format_result, stops)
-    stops_text = "\n".join(stops_text_ls)
-    return f"{title}\n\n{stops_text}"

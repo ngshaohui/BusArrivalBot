@@ -1,7 +1,8 @@
 import unittest
 
-from format_message import bus_stop_search_msg, next_bus_msg
 from utils.custom_typings import BusInfo, BusStop
+
+from .bus_arrival import next_bus_msg
 
 STOPS: list[BusStop] = [
     {
@@ -90,32 +91,6 @@ BUS_123: list[BusInfo] = [
         },
     }
 ]
-
-
-class TestBusSearch(unittest.TestCase):
-    def test_no_search_results(self):
-        msg = bus_stop_search_msg([])
-        expected_str = "No bus stops match the search query"
-        self.assertEqual(msg, expected_str)
-
-    def test_one_search_result(self):
-        msg = bus_stop_search_msg(STOPS[:1])
-        expected_str = """Showing 1 out of 1 bus stop matching the search query
-
-/14519 Resorts World Sentosa"""
-        self.assertEqual(msg, expected_str)
-
-    def test_multiple_search_results(self):
-        msg = bus_stop_search_msg(STOPS)
-        expected_str = """Showing 6 out of 6 bus stops matching the search query
-
-/14519 Resorts World Sentosa
-/45029 Opp Heavy Veh Pk
-/45359 Blk 790
-/59009 Yishun Int
-/44539 Lot 1/Choa Chu Kang Stn
-/46119 Marsiling CC"""
-        self.assertEqual(msg, expected_str)
 
 
 class TestBusArrival(unittest.TestCase):
