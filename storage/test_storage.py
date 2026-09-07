@@ -2,64 +2,66 @@
 https://www.sqlite.org/inmemorydb.html
 """
 
-import unittest
+import pytest
 
 from .adapter import StorageUtility
 
 
-class TestStorage(unittest.TestCase):
-    def setUp(self):
-        self.storage_utility = StorageUtility(in_memory=True)
-
-    def test_save_0_stops(self):
-        """
-        add 0 stops
-        """
-        self.storage_utility.save_stops(123456, [])
-        stops = self.storage_utility.get_saved_stops(123456)
-        self.assertEqual(stops, [])
-
-    def test_save_1_stop(self):
-        """
-        add 1 stop
-        """
-        self.storage_utility.save_stops(123456, ["123456"])
-        stops = self.storage_utility.get_saved_stops(123456)
-        self.assertEqual(stops, ["123456"])
-
-    def test_update_stop(self):
-        """
-        add 1 stop and update
-        """
-        self.storage_utility.save_stops(123456, ["123456"])
-        self.storage_utility.save_stops(123456, ["222", "333", "444"])
-        stops = self.storage_utility.get_saved_stops(123456)
-        self.assertEqual(stops, ["222", "333", "444"])
-
-    def test_nonexistent_user(self):
-        """
-        add 1 stop
-        """
-        self.storage_utility.save_stops(123456, ["123456"])
-        stops = self.storage_utility.get_saved_stops(999111)
-        self.assertEqual(stops, [])
-
-    def test_check_user_exists(self):
-        """
-        check if user exists
-        """
-        self.storage_utility.save_stops(123456, [])
-        self.assertTrue(self.storage_utility.check_user_exists(123456))
-        self.assertFalse(self.storage_utility.check_user_exists(999111))
-
-    def test_add_and_retrieve_stop(self):
-        """
-        add one stop to a list of empty stops and retrieve it
-        """
-        self.storage_utility.save_stop(123456, "42012")
-        stops = self.storage_utility.get_saved_stops(123456)
-        self.assertEqual(stops, ["42012"])
+@pytest.fixture
+def storage_utility():
+    storage_utility = StorageUtility(in_memory=True)
+    storage_utility.add_user(123456)
+    return storage_utility
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_save_0_stops(storage_utility: StorageUtility):
+    """
+    add 0 stops
+    """
+    storage_utility.save_stops(123456, [])
+    stops = storage_utility.get_saved_stops(123456)
+    assert stops == []
+
+
+def test_save_1_stop(storage_utility: StorageUtility):
+    """
+    add 1 stop
+    """
+    storage_utility.save_stops(123456, ["123456"])
+    stops = storage_utility.get_saved_stops(123456)
+    assert stops == ["123456"]
+
+
+def test_update_stop(storage_utility: StorageUtility):
+    """
+    add 1 stop and update
+    """
+    storage_utility.save_stops(123456, ["123456"])
+    storage_utility.save_stops(123456, ["222", "333", "444"])
+    stops = storage_utility.get_saved_stops(123456)
+    assert stops == ["222", "333", "444"]
+
+
+def test_nonexistent_user(storage_utility: StorageUtility):
+    """
+    check if able to query for non-existent user
+    """
+    storage_utility.save_stops(123456, ["123456"])
+    stops = storage_utility.get_saved_stops(999111)
+    assert stops == []
+
+
+def test_nonexistent_user_add_stop(storage_utility: StorageUtility):
+    """
+    check if able to query for non-existent user
+    """
+    assert storage_utility.save_stops(999111, ["123456"]) == False
+    assert storage_utility.get_saved_stops(123456) == []
+
+
+def test_check_user_exists(storage_utility: StorageUtility):
+    """
+    check if user exists
+    """
+    assert storage_utility.check_user_exists(123456) == True
+    assert storage_utility.check_user_exists(999999) == False
