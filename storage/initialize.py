@@ -1,7 +1,5 @@
 import sqlite3
 
-TABLE_NAME = "saved_stops"
-
 
 class StorageUtilityInitError(Exception):
     pass
@@ -9,16 +7,33 @@ class StorageUtilityInitError(Exception):
 
 def init(con: sqlite3.Connection):
     try:
-        cur = con.cursor()
-        cur.execute(f"""
-        CREATE TABLE {TABLE_NAME} (
+        con.execute("""
+        CREATE TABLE users (
             chat_id INTEGER PRIMARY KEY,
+            created_at TEXT NOT NULL
+        );
+        """)
+        con.execute("""
+        CREATE TABLE saved_stops (
+            chat_id INTEGER PRIMARY KEY
+                REFERENCES users(chat_id)
+                ON DELETE CASCADE,
             bus_stop_codes TEXT NOT NULL
+        );
+        """)
+        con.execute("""
+        CREATE TABLE user_settings (
+            chat_id INTEGER PRIMARY KEY
+                REFERENCES users(chat_id)
+                ON DELETE CASCADE,
+            show_load INTEGER NOT NULL DEFAULT 0,
+            show_type INTEGER NOT NULL DEFAULT 0
         );
         """)
         con.commit()
     except sqlite3.Error as e:
-        raise StorageUtilityInitError("Encountered error while initializing DB", e)
+        con.rollback()
+        raise StorageUtilityInitError("Encountered error while initializing DB") from e
 
 
 def main():

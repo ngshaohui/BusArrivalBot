@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import NamedTuple, TypedDict
 
 type Coordinate = tuple[float, float]
 type TimestampISO8601 = str  # "2024-11-26T22:04:48+08:00"
@@ -49,3 +49,8 @@ class BusInfo(TypedDict):
 
 class BusArrivalServiceResponse(TypedDict):
     Services: list[BusInfo]
+
+
+class UserSettings(NamedTuple):
+    show_load: bool
+    show_type: bool

@@ -1,5 +1,8 @@
+import datetime
 import logging
 import sqlite3
+
+from utils.custom_typings import UserSettings
 
 from .initialize import init
 
@@ -10,12 +13,11 @@ class StorageUtilityTableError(Exception):
     pass
 
 
-# TODO use constant for table name
 class StorageUtility:
     def __init__(
         self, in_memory: bool | None = None, con: sqlite3.Connection | None = None
     ):
-        if in_memory is not None:
+        if in_memory is not None and in_memory:
             logger.info("Initializing new database from memory")
             self.con = sqlite3.connect("file::memory:", uri=True)
             init(self.con)
@@ -26,6 +28,7 @@ class StorageUtility:
             logger.info("Using specified database file")
             self.con = con
 
+        self.con.execute("PRAGMA foreign_keys = ON;")
         raise_if_table_not_init(self.con)
 
     def check_user_exists(self, chat_id: int) -> bool:
@@ -36,13 +39,38 @@ class StorageUtility:
             cur = self.con.cursor()
             res = cur.execute(
                 """
-            SELECT EXISTS(SELECT 1 FROM saved_stops WHERE chat_id = ?);
+            SELECT EXISTS(SELECT 1 FROM users WHERE chat_id = ?);
             """,
                 (chat_id,),
             )
             exists: tuple[int] = res.fetchone()
             return exists[0] == 1
         except sqlite3.Error as e:
+            # TODO log and handle error
+            print(f"SQLite error: {e}")
+            return False
+
+    def add_user(self, chat_id: int) -> bool:
+        """
+        add a user to the database
+        """
+        try:
+            self.con.execute(
+                "INSERT INTO users (chat_id, created_at) VALUES (?, ?)",
+                (chat_id, datetime.datetime.now(datetime.UTC).isoformat()),
+            )
+            self.con.execute(
+                "INSERT INTO saved_stops (chat_id, bus_stop_codes) VALUES (?, ?)",
+                (chat_id, ""),
+            )
+            self.con.execute(
+                "INSERT INTO user_settings (chat_id) VALUES (?)",
+                (chat_id,),
+            )
+            self.con.commit()
+            return True
+        except sqlite3.Error as e:
+            self.con.rollback()
             # TODO log and handle error
             print(f"SQLite error: {e}")
             return False
@@ -115,6 +143,45 @@ class StorageUtility:
                 )
         return False
 
+    def save_user_settings(self, chat_id: int, show_load: int, show_type: int) -> bool:
+        try:
+            cur = self.con.cursor()
+            cur.execute(
+                """
+                INSERT INTO user_settings (chat_id, show_load, show_type)
+                VALUES (?, ?, ?)
+                ON CONFLICT(chat_id)
+                DO UPDATE SET
+                    show_load = excluded.show_load,
+                    show_type = excluded.show_type;
+                """,
+                (chat_id, show_load, show_type),
+            )
+            self.con.commit()
+            return True
+        except sqlite3.Error as e:
+            # TODO handle error
+            print(f"SQLite error: {e}")
+            return False
+
+    def get_user_settings(self, chat_id) -> UserSettings:
+        try:
+            cur = self.con.cursor()
+            res = cur.execute(
+                """
+            SELECT show_load, show_type FROM user_settings WHERE chat_id = ?
+            """,
+                (chat_id,),
+            )
+            user_settings: tuple[int, int] | None = res.fetchone()
+            if user_settings is None:
+                return UserSettings(False, False)
+            return UserSettings(bool(user_settings[0]), bool(user_settings[1]))
+        except sqlite3.Error as e:
+            # TODO log and handle error
+            print(f"SQLite error: {e}")
+            return UserSettings(False, False)
+
     def remove_user(self, chat_id: int) -> bool:
         """
         remove user from DB
@@ -123,7 +190,7 @@ class StorageUtility:
             cur = self.con.cursor()
             cur.execute(
                 """
-            DELETE FROM saved_stops WHERE chat_id = ?;
+            DELETE FROM users WHERE chat_id = ?;
             """,
                 (chat_id,),
             )
@@ -137,15 +204,14 @@ class StorageUtility:
 
 def raise_if_table_not_init(conn: sqlite3.Connection):
     """
-    Return True if the database contains any user-created tables,
-    ignoring SQLite internal tables.
+    Check if required tables are present
     """
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT name 
+        SELECT COUNT(*) 
         FROM sqlite_master 
         WHERE type='table'
-          AND name = 'saved_stops';
+          AND name IN ('users', 'saved_stops', 'user_settings');
     """)
-    if cursor.fetchone() is None:
-        raise StorageUtilityTableError("Table 'saved_stops' not initialized in DB")
+    if cursor.fetchone()[0] != 3:
+        raise StorageUtilityTableError("Table(s) not initialized in DB")
