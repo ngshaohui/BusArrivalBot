@@ -54,8 +54,9 @@ async def bus_stop_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         reply_msg = (
             "Currently experiencing issues with LTA's API, please try again later"
         )
+    user_settings = app_state.storage_utility.get_user_settings(chat_id)
     if stop_info is not None and busses is not None:
-        reply_msg = next_bus_msg(stop_info, busses, int(time.time()))
+        reply_msg = next_bus_msg(stop_info, busses, int(time.time()), user_settings)
 
     if has_message:
         reply_markup = InlineKeyboardMarkup(make_refresh_button(stop_id))

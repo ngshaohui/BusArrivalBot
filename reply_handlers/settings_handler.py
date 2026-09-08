@@ -59,7 +59,7 @@ async def settings_consent_handler(
         return  # ignore malformed requests
 
     app_state = get_app_state(context.application)
-    app_state.storage_utility.save_stops(chat_id, [])
+    app_state.storage_utility.add_user(chat_id)
     await show_settings_handler(update, context)
 
 

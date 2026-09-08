@@ -1,6 +1,6 @@
 import unittest
 
-from utils.custom_typings import BusInfo, BusStop
+from utils.custom_typings import BusInfo, BusStop, UserSettings
 
 from .bus_arrival import next_bus_msg
 
@@ -95,11 +95,11 @@ BUS_123: list[BusInfo] = [
 
 class TestBusArrival(unittest.TestCase):
     def test_arrival(self):
-        msg = next_bus_msg(STOPS[0], BUS_123, 1736351595)
+        msg = next_bus_msg(STOPS[0], BUS_123, 1736351595, UserSettings(False, False))
         expected_str = """Resorts World Sentosa | 14519
 
 123
-5 min    |    27 min    |    N.A."""
+5 min  |  27 min  |  N.A."""
         self.assertEqual(msg, expected_str)
 
 
