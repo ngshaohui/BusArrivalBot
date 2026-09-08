@@ -25,6 +25,7 @@ from reply_handlers.settings_handler import (
 from reply_handlers.text_reply_handler import message_handler
 from scripts import fetch_routes, fetch_stops
 from storage.adapter import StorageUtility
+from utils.constants import APP_VERSION
 from utils.custom_typings import BusRoute, BusStop
 
 # Enable logging
@@ -57,7 +58,7 @@ Save the BusStopCode for quick access and view the list of saved stops with /lis
 
 You can also send your location to find the nearest stops!
 
-{config("VERSION")}""",
+v{APP_VERSION}""",
         parse_mode="Markdown",
     )
 
