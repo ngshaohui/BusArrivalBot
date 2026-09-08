@@ -15,10 +15,8 @@ from telegram.ext import (
 
 from bot_app_state import AppState, get_app_state, register_app_state
 from bus_service.adapter import BusServiceAdapter
-from reply_handlers.callback_query_handler import (
-    bus_stop_handler,
-    route_direction_handler,
-)
+from reply_handlers.bus_arrival import REGEX_STOP_CODE, bus_stop_handler
+from reply_handlers.callback_query_handler import route_direction_handler
 from reply_handlers.inline_buttons import get_stop_inline_button
 from reply_handlers.settings_handler import (
     register_settings_handlers,
@@ -65,7 +63,6 @@ You can also send your location to find the nearest stops!
 
 
 async def location_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    # workaround: pylint error suppression
     if update.message is None or update.message.location is None:
         return
     # get nearest stops
@@ -143,7 +140,9 @@ def main() -> None:
     # on non command i.e message
     application.add_handler(MessageHandler(filters.TEXT, message_handler))
     application.add_handler(MessageHandler(filters.LOCATION, location_handler))
-    application.add_handler(CallbackQueryHandler(bus_stop_handler, pattern=r"\d{5}"))
+    application.add_handler(
+        CallbackQueryHandler(bus_stop_handler, pattern=REGEX_STOP_CODE)
+    )
     application.add_handler(
         CallbackQueryHandler(route_direction_handler, pattern=r"\d{1,3}\w?\,[12]")
     )

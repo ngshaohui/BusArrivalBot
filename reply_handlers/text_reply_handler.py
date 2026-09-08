@@ -1,24 +1,19 @@
 import re
-import time
 
 from telegram import InlineKeyboardMarkup, Message, Update
 from telegram.ext import ContextTypes
 
 from bot_app_state import get_app_state
 from bus_service.adapter import GetRouteStops
-from bus_service.bus_arrival import get_arriving_busses
-from bus_service.bus_stops import GetStopInfo, SearchPossibleStops
-from message_formatters.bus_arrival import next_bus_msg
+from bus_service.bus_stops import SearchPossibleStops
 from message_formatters.bus_route import bus_route_msg
 from message_formatters.bus_stop_search import bus_stop_search_msg
 from reply_handlers.settings_handler import save_stop
 from user_data.saved_stops import list_saved_stops
 
-from .inline_buttons import make_change_route_btn, make_refresh_button
+from .bus_arrival import REGEX_STOP_CODE, bus_stop_handler
+from .inline_buttons import make_change_route_btn
 
-# 34120
-# /29125
-REGEX_STOP_CODE = r"\/?(\d{5})"
 # 67
 # /961M
 REGEX_BUS_NUM = r"^\/?(\d{1,3}[A-Za-z]?)$"
@@ -50,9 +45,8 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     msg_text = message.text
     app_state = get_app_state(context.application)
 
-    if m := re.match(REGEX_STOP_CODE, msg_text):
-        stop_code = m.group(1)
-        await bus_stop_code(app_state.bus_service.get_stop_info, message, stop_code)
+    if re.match(REGEX_STOP_CODE, msg_text):
+        await bus_stop_handler(update, context)
     elif m := re.match(REGEX_BUS_NUM, msg_text, re.IGNORECASE):
         bus_number = m.group(1)
         await bus_route(app_state.bus_service.get_route_stops, message, bus_number)
@@ -79,31 +73,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     else:
         # unknown command message
         await unknown_command(message)
-
-
-async def bus_stop_code(
-    get_stop_info: GetStopInfo, message: Message, stop_id: str
-) -> None:
-    """
-    reply user with bus arrival information
-    """
-    # craft message
-    stop_info = get_stop_info(stop_id)
-    if stop_info is None:
-        await message.reply_text("Unknown bus stop code")
-        return
-    busses = get_arriving_busses(stop_id)
-    if busses is None:
-        await message.reply_text(
-            "Currently experiencing issues with LTA's API, please try again later"
-        )
-        return
-    reply_msg = next_bus_msg(stop_info, busses, int(time.time()))
-
-    # refresh button
-    reply_markup = InlineKeyboardMarkup(make_refresh_button(stop_id))
-
-    await message.reply_text(text=reply_msg, reply_markup=reply_markup)
 
 
 async def bus_route(
