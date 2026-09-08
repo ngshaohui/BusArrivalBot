@@ -1,7 +1,7 @@
 import re
 import time
 
-from telegram import InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.error import BadRequest
 from telegram.ext import ContextTypes
 
@@ -10,11 +10,14 @@ from bus_service.bus_arrival import get_arriving_busses
 from message_formatters.bus_arrival import next_bus_msg
 from utils.bot_utils import get_chat_id
 
-from .inline_buttons import make_refresh_button
-
 # 34120
 # /29125
 REGEX_STOP_CODE = r"\/?(\d{5})"
+
+
+def make_refresh_button(stop_id: str) -> list[list[InlineKeyboardButton]]:
+    "button to refresh arrival timings"
+    return [[InlineKeyboardButton("Refresh", callback_data=stop_id)]]
 
 
 async def bus_stop_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -58,13 +61,11 @@ async def bus_stop_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     if stop_info is not None and busses is not None:
         reply_msg = next_bus_msg(stop_info, busses, int(time.time()), user_settings)
 
+    reply_markup = InlineKeyboardMarkup(make_refresh_button(stop_id))
+
     if has_message:
-        reply_markup = InlineKeyboardMarkup(make_refresh_button(stop_id))
         await message.reply_text(text=reply_msg, reply_markup=reply_markup)
     elif has_query:
-        # refresh button
-        reply_markup = InlineKeyboardMarkup(make_refresh_button(stop_id))
-
         await query.answer()
         try:
             await query.edit_message_text(text=reply_msg, reply_markup=reply_markup)

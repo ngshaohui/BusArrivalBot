@@ -1,3 +1,6 @@
+import datetime
+import zoneinfo
+
 from bus_service.bus_arrival import get_arrival_time_mins
 from utils.custom_typings import BusInfo, BusStop, NextBusInfo, UserSettings
 
@@ -69,4 +72,7 @@ def next_bus_msg(
         for bus_service in services
     ]
     arrivals_text = "\n\n".join(arrivals)
-    return f"{title}\n\n{arrivals_text}"
+    formatted_datetime = datetime.datetime.fromtimestamp(
+        cur_unix_time, tz=zoneinfo.ZoneInfo("Asia/Singapore")
+    ).strftime("%-d %b %-I.%M%p")
+    return f"{title}\n\n{arrivals_text}\n\nLast refreshed {formatted_datetime}"
