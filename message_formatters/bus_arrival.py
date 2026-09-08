@@ -10,11 +10,6 @@ BUS_LOAD = {
 }
 BUS_TYPE = {"BD": "BD", "DD": "DD"}
 
-LEGEND = """Legend
-DD - Double Decker, BD - Bendy Bus
-🟢 - Seats, 🟡 - Standing, 🔴 - Limited Standing
-"""
-
 
 def bus_arrivals_msg(
     bus: BusInfo, cur_unix_time: int, user_settings: UserSettings
@@ -39,7 +34,7 @@ def get_arrival_load_and_type(
         text += BUS_LOAD.get(next_bus_info["Load"], "")
     if user_settings.show_type:
         text += BUS_TYPE.get(next_bus_info["Type"], "")
-    return text if len(text) == 0 else " " + f"({text})"
+    return text if len(text) == 0 else f" ({text})"
 
 
 def get_arrival_time(arrival_time: str, cur_unix_time: int) -> str:

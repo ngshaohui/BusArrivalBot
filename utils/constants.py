@@ -15,3 +15,10 @@ class SETTINGS_ACTIONS(Enum):
     CONSENT = "SETTINGS_CONSENT"
     DECLINE_FLOW = "SETTINGS_DECLINE_FLOW"
     DECLINE = "SETTINGS_DECLINE"
+    SYMBOL_SHOW = "SETTINGS_SYMBOL_SHOW"
+
+
+SYMBOLS_LEGEND = """Legend
+🟢 - Seats, 🟡 - Standing, 🔴 - Limited Standing
+DD - Double Decker, BD - Bendy Bus
+"""
