@@ -1,25 +1,17 @@
 import re
 
-from telegram import InlineKeyboardMarkup, Message, Update
+from telegram import Message, Update
 from telegram.ext import ContextTypes
 
 from bot_app_state import get_app_state
-from bus_service.adapter import GetRouteStops
 from bus_service.bus_stops import SearchPossibleStops
-from message_formatters.bus_route import bus_route_msg
 from message_formatters.bus_stop_search import bus_stop_search_msg
 from reply_handlers.settings_handler import save_stop
 from user_data.saved_stops import list_saved_stops
 
 from .bus_arrival import REGEX_STOP_CODE, bus_stop_handler
-from .inline_buttons import make_change_route_btn
+from .bus_route import REGEX_ROUTE, route_direction_handler
 
-# 67
-# /961M
-REGEX_BUS_NUM = r"^\/?(\d{1,3}[A-Za-z]?)$"
-# route 2
-# /route 307E
-REGEX_ROUTE = r"\/?route\s*(\d{1,3}[A-Za-z]?)?"
 # search opp heavy
 # /search pei
 REGEX_SEARCH = r"\/?search\s*(.*)"
@@ -47,13 +39,9 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     if re.match(REGEX_STOP_CODE, msg_text):
         await bus_stop_handler(update, context)
-    elif m := re.match(REGEX_BUS_NUM, msg_text, re.IGNORECASE):
-        bus_number = m.group(1)
-        await bus_route(app_state.bus_service.get_route_stops, message, bus_number)
-    elif m := re.match(REGEX_ROUTE, msg_text, re.IGNORECASE):
-        # TODO consider deprecating this command
-        bus_number = m.group(1)
-        await bus_route(app_state.bus_service.get_route_stops, message, bus_number)
+    elif re.match(REGEX_ROUTE, msg_text, re.IGNORECASE):
+        # TODO: caveat - does not handle /route (without a number)
+        await route_direction_handler(update, context)
     elif m := re.match(REGEX_SEARCH, msg_text, re.IGNORECASE):
         query_str = m.group(1)
         query: list[str] = re.split(r"[\s\/\-]", query_str)
@@ -73,30 +61,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     else:
         # unknown command message
         await unknown_command(message)
-
-
-async def bus_route(
-    get_route_stops: GetRouteStops, message: Message, bus_number: str | None
-) -> None:
-    """
-    reply user with bus route information
-    """
-    if bus_number is None:
-        await message.reply_text("Please provide a bus number")
-        return
-
-    # craft message
-    bus_number = bus_number.upper()
-    route_info = get_route_stops(bus_number, 1)
-    if route_info is None:
-        await message.reply_text("Unknown bus number")
-        return
-    reply_msg = bus_route_msg(bus_number, route_info)
-
-    # refresh button
-    reply_markup = InlineKeyboardMarkup(make_change_route_btn(bus_number, 2))
-
-    await message.reply_text(text=reply_msg, reply_markup=reply_markup)
 
 
 async def search(

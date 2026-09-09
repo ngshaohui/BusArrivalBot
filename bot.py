@@ -16,7 +16,7 @@ from telegram.ext import (
 from bot_app_state import AppState, get_app_state, register_app_state
 from bus_service.adapter import BusServiceAdapter
 from reply_handlers.bus_arrival import REGEX_STOP_CODE, bus_stop_handler
-from reply_handlers.callback_query_handler import route_direction_handler
+from reply_handlers.bus_route import route_direction_handler
 from reply_handlers.inline_buttons import get_stop_inline_button
 from reply_handlers.settings_handler import (
     register_settings_handlers,
