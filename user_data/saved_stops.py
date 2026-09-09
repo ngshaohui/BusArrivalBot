@@ -32,7 +32,18 @@ async def list_saved_stops(
     # TODO: indicate when a saved stop is no longer present
 
     # build keyboard
-    text = "Pick a list of saved stops from the list below"
-    keyboard = list(map(get_stop_inline_button, stops))
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(text=text, reply_markup=reply_markup)
+    if len(stops) == 0:
+        text = """List is currently empty.
+
+You can add any BusStopCode to this list for quick access
+`add 08031`"""
+        reply_markup = None
+    else:
+        text = "Pick a list of saved stops from the list below"
+        reply_markup = InlineKeyboardMarkup(
+            [get_stop_inline_button(stop) for stop in stops]
+        )
+
+    await update.message.reply_text(
+        text=text, parse_mode="Markdown", reply_markup=reply_markup
+    )
