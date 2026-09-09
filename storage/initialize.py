@@ -43,21 +43,22 @@ def main():
 
 
 def populate_dummy():
-    con = sqlite3.connect("bus_arrival_bot.db")
-    try:
-        cur = con.cursor()
-        save_stops = [(127038678, "45029,43099,42071")]
-        cur.executemany(
-            """
-        INSERT INTO saved_stops (chat_id, bus_stop_codes) VALUES(?, ?)
-        """,
-            save_stops,
-        )
-        con.commit()
-    except sqlite3.Error as e:
-        raise StorageUtilityInitError("Encountered error while populating DB", e)
-    finally:
-        con.close()
+    with sqlite3.connect("bus_arrival_bot.db") as conn:
+        try:
+            save_stops = [(127038678, "45029,43099,42071")]
+            conn.executemany(
+                """
+            INSERT INTO saved_stops (chat_id, bus_stop_codes) VALUES(?, ?)
+            """,
+                save_stops,
+            )
+            conn.commit()
+        except sqlite3.Error as e:
+            raise StorageUtilityInitError(
+                "Encountered error while populating DB with dummy data"
+            ) from e
+        finally:
+            conn.close()
 
 
 if __name__ == "__main__":

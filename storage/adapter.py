@@ -36,8 +36,7 @@ class StorageUtility:
         check if a user exists in the database
         """
         try:
-            cur = self.con.cursor()
-            res = cur.execute(
+            res = self.con.execute(
                 """
             SELECT EXISTS(SELECT 1 FROM users WHERE chat_id = ?);
             """,
@@ -80,8 +79,7 @@ class StorageUtility:
         get list of BusStopCode user has saved
         """
         try:
-            cur = self.con.cursor()
-            res = cur.execute(
+            res = self.con.execute(
                 """
             SELECT bus_stop_codes FROM saved_stops WHERE chat_id = ?;
             """,
@@ -104,8 +102,7 @@ class StorageUtility:
         """
         saved_stops_str = ",".join(stops)
         try:
-            cur = self.con.cursor()
-            cur.execute(
+            self.con.execute(
                 """
             INSERT INTO saved_stops (chat_id, bus_stop_codes) VALUES (?, ?)
             ON CONFLICT(chat_id)
@@ -145,8 +142,7 @@ class StorageUtility:
 
     def save_user_settings(self, chat_id: int, show_load: int, show_type: int) -> bool:
         try:
-            cur = self.con.cursor()
-            cur.execute(
+            self.con.execute(
                 """
                 INSERT INTO user_settings (chat_id, show_load, show_type)
                 VALUES (?, ?, ?)
@@ -166,8 +162,7 @@ class StorageUtility:
 
     def get_user_settings(self, chat_id) -> UserSettings:
         try:
-            cur = self.con.cursor()
-            res = cur.execute(
+            res = self.con.execute(
                 """
             SELECT show_load, show_type FROM user_settings WHERE chat_id = ?
             """,
@@ -187,8 +182,7 @@ class StorageUtility:
         remove user from DB
         """
         try:
-            cur = self.con.cursor()
-            cur.execute(
+            self.con.execute(
                 """
             DELETE FROM users WHERE chat_id = ?;
             """,
@@ -206,12 +200,11 @@ def raise_if_table_not_init(conn: sqlite3.Connection):
     """
     Check if required tables are present
     """
-    cursor = conn.cursor()
-    cursor.execute("""
+    res = conn.execute("""
         SELECT COUNT(*) 
         FROM sqlite_master 
         WHERE type='table'
           AND name IN ('users', 'saved_stops', 'user_settings');
     """)
-    if cursor.fetchone()[0] != 3:
+    if res.fetchone()[0] != 3:
         raise StorageUtilityTableError("Table(s) not initialized in DB")
