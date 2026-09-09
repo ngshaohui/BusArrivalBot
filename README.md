@@ -16,6 +16,12 @@ Create a file `.env` containing the keys from `.env.example`
 
 You will need a bot token from `@BotFather` to host your own instance of the bot
 
+### Init database
+
+```shell
+uv run storage/initialize.py
+```
+
 ### Start bot
 
 Run an instance of the bot
@@ -34,8 +40,8 @@ When developing locally
 
 ```bash
 # commands to be run from the project root
-uv run python -m scripts.fetch_stops
-uv run python -m scripts.fetch_routes
+uv run python scripts/fetch_stops.py
+uv run python scripts/fetch_routes.py
 ```
 
 2. Set `DEVELOPMENT_MODE=True` in the `.env` file.
@@ -100,11 +106,11 @@ docker run --name bus-arrival-bot --rm bus-arrival-bot:0.1.0
 
 ### Milestone 7
 
-- [ ] Refactor into modules by functional responsbility
+- [~] Refactor into modules by functional responsbility
 
 ### Milestone 8
 
-- [ ] [Precommit hooks](https://docs.astral.sh/uv/guides/integration/pre-commit/)
+- [x] [Precommit hooks](https://docs.astral.sh/uv/guides/integration/pre-commit/)
 - [ ] CI/CD tests
 
 ### Work
