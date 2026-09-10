@@ -6,9 +6,9 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "apscheduler>=3.11.0",
+    "httpx>=0.28.1",
     "python-decouple-typed>=3.11.0",
     "python-telegram-bot>=22.3",
-    "requests>=2.32.4",
     "scipy>=1.16.1",
 ]
 

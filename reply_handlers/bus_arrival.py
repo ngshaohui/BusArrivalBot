@@ -1,3 +1,4 @@
+import asyncio
 import re
 import time
 
@@ -52,7 +53,8 @@ async def bus_stop_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     stop_info = app_state.bus_service.get_stop_info(stop_id)
     if stop_info is None:
         reply_msg = "Unknown bus stop code"
-    busses = get_arriving_busses(stop_id)  # stop_id should never be None
+    # TODO: await get user settings here
+    (busses,) = await asyncio.gather(get_arriving_busses(stop_id))
     if busses is None:
         reply_msg = (
             "Currently experiencing issues with LTA's API, please try again later"

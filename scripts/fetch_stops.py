@@ -5,7 +5,7 @@ import json
 import logging
 from functools import reduce
 
-import requests
+import httpx
 from decouple import config
 
 from utils.custom_typings import BusStop
@@ -49,7 +49,7 @@ def fetch_stops() -> list[BusStop]:
     headers = {"AccountKey": config("ACCOUNT_KEY", cast=str)}
 
     while True:
-        res = requests.get(f"{URL_GET_ALL_STOPS}?$skip={skips}", headers=headers)
+        res = httpx.get(f"{URL_GET_ALL_STOPS}?$skip={skips}", headers=headers)
         json_data = res.json()
         if not json_data["value"]:  # break loop when resulting json is empty
             break

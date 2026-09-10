@@ -5,7 +5,7 @@ import json
 import logging
 from functools import reduce
 
-import requests
+import httpx
 from decouple import config
 
 from utils.custom_typings import BusRoute
@@ -47,7 +47,7 @@ def fetch_routes() -> list[BusRoute]:
     headers = {"AccountKey": config("ACCOUNT_KEY", cast=str)}
 
     while True:
-        res = requests.get(f"{URL_GET_ALL_ROUTES}?$skip={skips}", headers=headers)
+        res = httpx.get(f"{URL_GET_ALL_ROUTES}?$skip={skips}", headers=headers)
         json_data = res.json()
         if not json_data["value"]:  # break loop when resulting json is empty
             break

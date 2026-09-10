@@ -2,7 +2,7 @@ import logging
 import time
 from datetime import datetime
 
-import requests
+import httpx
 from decouple import config
 
 from utils.custom_typings import BusArrivalServiceResponse, BusInfo, TimestampISO8601
@@ -20,36 +20,37 @@ URL_GET_ARRIVING_BUSSES = (
 __bus_info_cache = LRUCache[list[BusInfo]](ttl=20, item_limit=100)
 
 
-def get_arriving_busses(bus_stop_code: str) -> list[BusInfo] | None:
+async def get_arriving_busses(bus_stop_code: str) -> list[BusInfo] | None:
     arriving_busses = __bus_info_cache.get(bus_stop_code)
     if arriving_busses is None:
-        arriving_busses = fetch_arriving_busses(bus_stop_code)
+        arriving_busses = await fetch_arriving_busses(bus_stop_code)
         if arriving_busses is not None:
             __bus_info_cache.set(bus_stop_code, arriving_busses)
     return arriving_busses
 
 
-def fetch_arriving_busses(bus_stop_code: str) -> list[BusInfo] | None:
+async def fetch_arriving_busses(bus_stop_code: str) -> list[BusInfo] | None:
     """
     fetch bus arrival timings from the LTA API
     """
     params = {"BusStopCode": bus_stop_code}
     headers = {"AccountKey": config("ACCOUNT_KEY")}
-    try:
-        res = requests.get(
-            URL_GET_ARRIVING_BUSSES, headers=headers, params=params, timeout=10
-        )
-        res.raise_for_status()
-        json_data: BusArrivalServiceResponse = res.json()
-        return json_data["Services"]
-    except requests.exceptions.RequestException as e:
-        # throttle error logging to prevent them from flooding logs
-        now = time.time()
-        global __last_error_log_time
-        if now - __last_error_log_time > __ERROR_LOG_COOLDOWN:
-            logger.error(f"Failed to fetch bus arrivals {e}")
-            __last_error_log_time = now
-        return None
+    async with httpx.AsyncClient() as client:
+        try:
+            res = await client.get(
+                URL_GET_ARRIVING_BUSSES, headers=headers, params=params, timeout=10
+            )
+            res.raise_for_status()
+            json_data: BusArrivalServiceResponse = res.json()
+            return json_data["Services"]
+        except httpx.RequestError as e:
+            # throttle error logging to prevent them from flooding logs
+            now = time.time()
+            global __last_error_log_time
+            if now - __last_error_log_time > __ERROR_LOG_COOLDOWN:
+                logger.error(f"Failed to fetch bus arrivals {e}")
+                __last_error_log_time = now
+            return None
 
 
 def get_arrival_time_mins(
