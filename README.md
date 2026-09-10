@@ -40,8 +40,8 @@ When developing locally
 
 ```bash
 # commands to be run from the project root
-uv run python scripts/fetch_stops.py
-uv run python scripts/fetch_routes.py
+uv run python -m scripts.fetch_stops
+uv run python -m scripts.fetch_routes
 ```
 
 2. Set `DEVELOPMENT_MODE=True` in the `.env` file.
