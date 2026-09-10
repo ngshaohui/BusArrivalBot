@@ -1,5 +1,6 @@
 # Run this script to get an updated all_stops.json
 
+import datetime
 import hashlib
 import json
 import logging
@@ -68,8 +69,17 @@ def run() -> list[BusStop]:
 
 def main():
     stops = run()
+    checksum = bus_stops_checksum(stops)
+    cur_timestamp = datetime.datetime.now(datetime.UTC).isoformat()
     with open("bus_stops.json", "w") as outfile:
-        json.dump(stops, outfile)
+        json.dump(
+            {
+                "checksum": checksum,
+                "created_at": cur_timestamp,
+                "bus_stops": stops,
+            },
+            outfile,
+        )
 
 
 if __name__ == "__main__":
