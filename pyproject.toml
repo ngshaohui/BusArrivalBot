@@ -5,6 +5,7 @@ description = "Telegram bot for checking bus arrival times in Singapore"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "aiosqlite>=0.22.1",
     "apscheduler>=3.11.0",
     "httpx>=0.28.1",
     "python-decouple-typed>=3.11.0",
@@ -17,6 +18,7 @@ dev = [
     "freezegun>=1.5.5",
     "pre-commit>=4.6.2",
     "pytest>=8.4.2",
+    "pytest-asyncio>=1.4.0",
     "ruff>=0.16.4",
     "ty>=0.0.74",
 ]

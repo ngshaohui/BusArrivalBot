@@ -1,19 +1,21 @@
-import sqlite3
+import asyncio
+
+import aiosqlite
 
 
 class StorageUtilityInitError(Exception):
     pass
 
 
-def init(con: sqlite3.Connection):
+async def init(con: aiosqlite.Connection):
     try:
-        con.execute("""
+        await con.execute("""
         CREATE TABLE users (
             chat_id INTEGER PRIMARY KEY,
             created_at TEXT NOT NULL
         );
         """)
-        con.execute("""
+        await con.execute("""
         CREATE TABLE saved_stops (
             chat_id INTEGER PRIMARY KEY
                 REFERENCES users(chat_id)
@@ -21,7 +23,7 @@ def init(con: sqlite3.Connection):
             bus_stop_codes TEXT NOT NULL
         );
         """)
-        con.execute("""
+        await con.execute("""
         CREATE TABLE user_settings (
             chat_id INTEGER PRIMARY KEY
                 REFERENCES users(chat_id)
@@ -30,36 +32,17 @@ def init(con: sqlite3.Connection):
             show_type INTEGER NOT NULL DEFAULT 0
         );
         """)
-        con.commit()
-    except sqlite3.Error as e:
-        con.rollback()
+        await con.commit()
+    except aiosqlite.Error as e:
+        await con.rollback()
         raise StorageUtilityInitError("Encountered error while initializing DB") from e
 
 
-def main():
-    con = sqlite3.connect("bus_arrival_bot.db")
-    init(con)
-    con.close()
-
-
-def populate_dummy():
-    with sqlite3.connect("bus_arrival_bot.db") as conn:
-        try:
-            save_stops = [(127038678, "45029,43099,42071")]
-            conn.executemany(
-                """
-            INSERT INTO saved_stops (chat_id, bus_stop_codes) VALUES(?, ?)
-            """,
-                save_stops,
-            )
-            conn.commit()
-        except sqlite3.Error as e:
-            raise StorageUtilityInitError(
-                "Encountered error while populating DB with dummy data"
-            ) from e
-        finally:
-            conn.close()
+async def main():
+    con = await aiosqlite.connect("bus_arrival_bot.db")
+    await init(con)
+    await con.close()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

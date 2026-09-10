@@ -1,6 +1,7 @@
 import datetime
 import logging
-import sqlite3
+
+import aiosqlite
 
 from utils.custom_typings import UserSettings
 
@@ -14,95 +15,101 @@ class StorageUtilityTableError(Exception):
 
 
 class StorageUtility:
-    def __init__(
-        self, in_memory: bool | None = None, con: sqlite3.Connection | None = None
-    ):
-        if in_memory is not None and in_memory:
+    def __init__(self, con: aiosqlite.Connection):
+        logger.info("Using specified database connection")
+        self.con: aiosqlite.Connection = con
+
+    @classmethod
+    # use classmethod to use async init
+    async def create(cls, in_memory: bool = False) -> "StorageUtility":
+        if in_memory:
             logger.info("Initializing new database from memory")
-            self.con = sqlite3.connect("file::memory:", uri=True)
-            init(self.con)
-        elif con is None:
-            logger.info("Using database file bus_arrival_bot.db")
-            self.con = sqlite3.connect("bus_arrival_bot.db")
+            con = await aiosqlite.connect("file::memory:", uri=True)
+            await init(con)
+
         else:
-            logger.info("Using specified database file")
-            self.con = con
+            logger.info("Using database file bus_arrival_bot.db")
+            con = await aiosqlite.connect("bus_arrival_bot.db")
 
-        self.con.execute("PRAGMA foreign_keys = ON;")
-        raise_if_table_not_init(self.con)
+        await con.execute("PRAGMA foreign_keys = ON;")
+        await raise_if_table_not_init(con)
 
-    def check_user_exists(self, chat_id: int) -> bool:
+        return cls(con)
+
+    async def check_user_exists(self, chat_id: int) -> bool:
         """
         check if a user exists in the database
         """
         try:
-            res = self.con.execute(
+            cur = await self.con.execute(
                 """
             SELECT EXISTS(SELECT 1 FROM users WHERE chat_id = ?);
             """,
                 (chat_id,),
             )
-            exists: tuple[int] = res.fetchone()
-            return exists[0] == 1
-        except sqlite3.Error as e:
+            # row: tuple[int]
+            row = await cur.fetchone()
+            return row is not None and row[0] == 1
+        except aiosqlite.Error as e:
             # TODO log and handle error
             print(f"SQLite error: {e}")
             return False
 
-    def add_user(self, chat_id: int) -> bool:
+    async def add_user(self, chat_id: int) -> bool:
         """
         add a user to the database
         """
         try:
-            self.con.execute(
+            await self.con.execute(
                 "INSERT INTO users (chat_id, created_at) VALUES (?, ?)",
                 (chat_id, datetime.datetime.now(datetime.UTC).isoformat()),
             )
-            self.con.execute(
+            await self.con.execute(
                 "INSERT INTO saved_stops (chat_id, bus_stop_codes) VALUES (?, ?)",
                 (chat_id, ""),
             )
-            self.con.execute(
+            await self.con.execute(
                 "INSERT INTO user_settings (chat_id) VALUES (?)",
                 (chat_id,),
             )
-            self.con.commit()
+            await self.con.commit()
             return True
-        except sqlite3.Error as e:
-            self.con.rollback()
+        except aiosqlite.Error as e:
+            await self.con.rollback()
             # TODO log and handle error
             print(f"SQLite error: {e}")
             return False
 
-    def get_saved_stops(self, chat_id: int) -> list[str]:
+    async def get_saved_stops(self, chat_id: int) -> list[str]:
         """
         get list of BusStopCode user has saved
         """
         try:
-            res = self.con.execute(
+            cur = await self.con.execute(
                 """
             SELECT bus_stop_codes FROM saved_stops WHERE chat_id = ?;
             """,
                 (chat_id,),
             )
-            saved_stops_res: tuple[str] | None = res.fetchone()
-            if saved_stops_res is None or saved_stops_res[0] == "":
+            # row: tuple[str] | None
+            row = await cur.fetchone()
+            if row is None or row[0] == "":
                 return []
-            saved_stops = saved_stops_res[0].split(",")
+            saved_stops = row[0].split(",")
             return saved_stops
-        except sqlite3.Error as e:
+        except aiosqlite.Error as e:
             # TODO log and handle error
             print(f"SQLite error: {e}")
             return []
 
-    def save_stops(self, chat_id: int, stops: list[str]) -> bool:
+    async def save_stops(self, chat_id: int, stops: list[str]) -> bool:
         """
         save list of BusStopCode in DB
         upserts record if chat_id already exists
         """
         saved_stops_str = ",".join(stops)
         try:
-            self.con.execute(
+            await self.con.execute(
                 """
             INSERT INTO saved_stops (chat_id, bus_stop_codes) VALUES (?, ?)
             ON CONFLICT(chat_id)
@@ -111,38 +118,40 @@ class StorageUtility:
             """,
                 (chat_id, saved_stops_str),
             )
-            self.con.commit()
+            await self.con.commit()
             return True
-        except sqlite3.Error as e:
+        except aiosqlite.Error as e:
             # TODO handle error
             print(f"SQLite error: {e}")
             return False
 
-    def save_stop(self, chat_id: int, stop_id: str) -> bool:
+    async def save_stop(self, chat_id: int, stop_id: str) -> bool:
         """
         add a single bus stop to the list of saved stops
         """
-        saved_stops = self.get_saved_stops(chat_id)
+        saved_stops = await self.get_saved_stops(chat_id)
         if stop_id in saved_stops:
             # stop already exists
             return False
-        return self.save_stops(chat_id, saved_stops + [stop_id])
+        return await self.save_stops(chat_id, saved_stops + [stop_id])
 
-    def remove_stop(self, chat_id: int, stop_id: str) -> bool:
+    async def remove_stop(self, chat_id: int, stop_id: str) -> bool:
         """
         remove a single bus stop from the list of saved stops
         """
-        saved_stops = self.get_saved_stops(chat_id)
+        saved_stops = await self.get_saved_stops(chat_id)
         for idx, saved_stop_id in enumerate(saved_stops):
             if stop_id == saved_stop_id:
-                return self.save_stops(
+                return await self.save_stops(
                     chat_id, saved_stops[:idx] + saved_stops[idx + 1 :]
                 )
         return False
 
-    def save_user_settings(self, chat_id: int, show_load: int, show_type: int) -> bool:
+    async def save_user_settings(
+        self, chat_id: int, show_load: int, show_type: int
+    ) -> bool:
         try:
-            self.con.execute(
+            await self.con.execute(
                 """
                 INSERT INTO user_settings (chat_id, show_load, show_type)
                 VALUES (?, ?, ?)
@@ -153,58 +162,60 @@ class StorageUtility:
                 """,
                 (chat_id, show_load, show_type),
             )
-            self.con.commit()
+            await self.con.commit()
             return True
-        except sqlite3.Error as e:
+        except aiosqlite.Error as e:
             # TODO handle error
             print(f"SQLite error: {e}")
             return False
 
-    def get_user_settings(self, chat_id) -> UserSettings:
+    async def get_user_settings(self, chat_id: int) -> UserSettings:
         try:
-            res = self.con.execute(
+            cur = await self.con.execute(
                 """
             SELECT show_load, show_type FROM user_settings WHERE chat_id = ?
             """,
                 (chat_id,),
             )
-            user_settings: tuple[int, int] | None = res.fetchone()
-            if user_settings is None:
+            # row will be tuple[int, int] | None but aiosqlite typing doesn't allow trivial casting
+            row = await cur.fetchone()
+            if row is None:
                 return UserSettings(False, False)
-            return UserSettings(bool(user_settings[0]), bool(user_settings[1]))
-        except sqlite3.Error as e:
+            return UserSettings(bool(row[0]), bool(row[1]))
+        except aiosqlite.Error as e:
             # TODO log and handle error
             print(f"SQLite error: {e}")
             return UserSettings(False, False)
 
-    def remove_user(self, chat_id: int) -> bool:
+    async def remove_user(self, chat_id: int) -> bool:
         """
         remove user from DB
         """
         try:
-            self.con.execute(
+            await self.con.execute(
                 """
             DELETE FROM users WHERE chat_id = ?;
             """,
                 (chat_id,),
             )
-            self.con.commit()
+            await self.con.commit()
             return True
-        except sqlite3.Error as e:
+        except aiosqlite.Error as e:
             # TODO handle error
             print(f"SQLite error: {e}")
             return False
 
 
-def raise_if_table_not_init(conn: sqlite3.Connection):
+async def raise_if_table_not_init(conn: aiosqlite.Connection):
     """
     Check if required tables are present
     """
-    res = conn.execute("""
+    cur = await conn.execute("""
         SELECT COUNT(*) 
         FROM sqlite_master 
         WHERE type='table'
           AND name IN ('users', 'saved_stops', 'user_settings');
     """)
-    if res.fetchone()[0] != 3:
+    row = await cur.fetchone()
+    if row is None or row[0] != 3:
         raise StorageUtilityTableError("Table(s) not initialized in DB")

@@ -110,13 +110,11 @@ def refresh_bus_service_adapter(bus_service_adapter: BusServiceAdapter):
     return refresh
 
 
-def main() -> None:
-    """Start the bot."""
+async def post_init(application: Application) -> None:
     # Init application state
     bus_service_adapter = BusServiceAdapter(
         *fetch_stops_and_routes(development_mode=DEVELOPMENT_MODE)
     )
-    storage_utility = StorageUtility(in_memory=DEVELOPMENT_MODE)
 
     # Fetch new data once a week on Sundays
     scheduler = BackgroundScheduler()
@@ -128,10 +126,20 @@ def main() -> None:
         minute=0,
     )
     scheduler.start()
+    storage_utility = await StorageUtility.create(in_memory=DEVELOPMENT_MODE)
+    register_app_state(application, AppState(bus_service_adapter, storage_utility))
+
+
+def main() -> None:
+    """Start the bot."""
 
     # Create the Application and pass it your bot's token.
-    application = Application.builder().token(config("BOT_TOKEN", cast=str)).build()
-    register_app_state(application, AppState(bus_service_adapter, storage_utility))
+    application = (
+        Application.builder()
+        .token(config("BOT_TOKEN", cast=str))
+        .post_init(post_init)
+        .build()
+    )
 
     # on different commands
     application.add_handler(CommandHandler("start", start))

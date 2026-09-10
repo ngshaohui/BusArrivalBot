@@ -21,11 +21,11 @@ async def list_saved_stops(
     if not chat_id or update.message is None:
         return  # ignore malformed requests
 
-    user_exists = storage_utility.check_user_exists(update.message.chat_id)
+    user_exists = await storage_utility.check_user_exists(update.message.chat_id)
     if not user_exists:
         return await settings_not_enabled_message(update)
 
-    saved_stops = storage_utility.get_saved_stops(chat_id)
+    saved_stops = await storage_utility.get_saved_stops(chat_id)
     stops: list[BusStop] = [
         stop for stop in map(get_stop_info, saved_stops) if stop is not None
     ]

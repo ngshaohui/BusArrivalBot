@@ -53,13 +53,14 @@ async def bus_stop_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     stop_info = app_state.bus_service.get_stop_info(stop_id)
     if stop_info is None:
         reply_msg = "Unknown bus stop code"
-    # TODO: await get user settings here
-    (busses,) = await asyncio.gather(get_arriving_busses(stop_id))
+    (busses, user_settings) = await asyncio.gather(
+        get_arriving_busses(stop_id),
+        app_state.storage_utility.get_user_settings(chat_id),
+    )
     if busses is None:
         reply_msg = (
             "Currently experiencing issues with LTA's API, please try again later"
         )
-    user_settings = app_state.storage_utility.get_user_settings(chat_id)
     if stop_info is not None and busses is not None:
         reply_msg = next_bus_msg(stop_info, busses, int(time.time()), user_settings)
 
