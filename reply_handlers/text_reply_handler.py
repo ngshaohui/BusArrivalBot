@@ -6,8 +6,8 @@ from telegram.ext import ContextTypes
 from bot_app_state import get_app_state
 from bus_service.bus_stops import SearchPossibleStops
 from message_formatters.bus_stop_search import bus_stop_search_msg
+from reply_handlers.saved_stops import list_saved_stops
 from reply_handlers.settings_handler import save_stop
-from user_data.saved_stops import list_saved_stops
 
 from .bus_arrival import REGEX_STOP_CODE, bus_stop_handler
 from .bus_route import REGEX_ROUTE, route_direction_handler
