@@ -67,8 +67,8 @@ uv run pytest
 ## Building and running with Docker
 
 ```bash
-docker build --rm -f Dockerfile -t bus-arrival-bot:0.1.0 .
-docker run --name bus-arrival-bot --rm bus-arrival-bot:0.1.0
+docker build --rm -f Dockerfile -t bus-arrival-bot:0.3.1 .
+docker run --name bus-arrival-bot --rm bus-arrival-bot:0.3.1
 ```
 
 ## Milestones
@@ -107,6 +107,7 @@ docker run --name bus-arrival-bot --rm bus-arrival-bot:0.1.0
 ### Milestone 7
 
 - [~] Refactor into modules by functional responsbility
+  - Can split up `reply_handlers.settings_handler.py` further
 
 ### Milestone 8
 
@@ -116,21 +117,13 @@ docker run --name bus-arrival-bot --rm bus-arrival-bot:0.1.0
 ### Work
 
 - [Chore] Fix comments
-- [Chore] Reduce repeated code for bus route directions
-- [Feature] DB migration scripts
 - [Feature] DB backup mechanism
 - [Feature] Paginate search query
-- [Feature] Additional bus information such as double decker, bus load
 - [Feature] Compare common stops
+- [Optimization] Cache user_settings
+  - Implement a UserData adapter, much like BusServiceAdapter in order to add a cache
 - [Optimization] Reduce size of Dockerfile (currently 299.53 MB)
-
-## Inconsistency of result displays
-
-Searching for bus stops yields the results in a text message, whereas location search displays it as inline keyboard buttons.
-
-The consideration was that inline buttons are not persistent, so it makes it harder to search.
-
-Can consider both approaches to see which provides a better UX.
+  - Can use `docker history <IMAGE_NAME>` to check which command adds how much size
 
 ## Bot commands
 
