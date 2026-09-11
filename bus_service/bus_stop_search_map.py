@@ -1,5 +1,5 @@
 # full word to the abbreviations are on openstreetmap
-__WORDS_MAP = {
+_WORDS_MAP = {
     "academy": "acad",  # Civil Defence Acad
     "aerospace": "a'space",
     "after": "aft",
@@ -93,4 +93,4 @@ def transform_query_token(query_token: str) -> str:
     """
     transforms search query using a word mapping if it exists
     """
-    return __WORDS_MAP.get(query_token, query_token)
+    return _WORDS_MAP.get(query_token, query_token)

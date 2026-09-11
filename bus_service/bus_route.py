@@ -24,7 +24,7 @@ def bus_route_utility(
             bus_route_map[service] = []
         bus_route_map[service].append(route["BusStopCode"])
 
-    def __get_bus_route(bus_number: str, direction: int) -> list[str] | None:
+    def _get_bus_route(bus_number: str, direction: int) -> list[str] | None:
         """
         search for bus stops within a route
 
@@ -37,11 +37,11 @@ def bus_route_utility(
         get list stops along a bus route
         has either 1 or 2 possible directions (loop or bidirectional)
         """
-        route = __get_bus_route(bus_number, direction)
+        route = _get_bus_route(bus_number, direction)
 
         if route is None:
             # possible that route 2 does not exist
-            route = __get_bus_route(bus_number, 1)
+            route = _get_bus_route(bus_number, 1)
         if route is None:
             return None
 

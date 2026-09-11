@@ -207,7 +207,7 @@ async def save_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
-def __make_saved_stops_list(
+def _make_saved_stops_list(
     get_stop_info: GetStopInfo,
     saved_stops: list[str],
     settings_action: SETTINGS_ACTIONS,
@@ -249,7 +249,7 @@ async def remove_flow_handler(
         text = "Remove a stop from the list below:"
     else:
         text = "List is empty."
-    callback_buttons = __make_saved_stops_list(
+    callback_buttons = _make_saved_stops_list(
         app_state.bus_service.get_stop_info,
         saved_stops,
         SETTINGS_ACTIONS.REMOVE,
@@ -300,7 +300,7 @@ async def reorder_flow_handler(
 
     saved_stops = await app_state.user_data_adapter.get_saved_stops(chat_id)
     text = "Select a stop to reorder from the list below:"
-    callback_buttons = __make_saved_stops_list(
+    callback_buttons = _make_saved_stops_list(
         app_state.bus_service.get_stop_info,
         saved_stops,
         SETTINGS_ACTIONS.REORDER_SELECT,
@@ -310,7 +310,7 @@ async def reorder_flow_handler(
     await query.edit_message_text(text=text, reply_markup=reply_markup)
 
 
-def __make_reorder_keyboard(stop_id: str, position: int) -> InlineKeyboardMarkup:
+def _make_reorder_keyboard(stop_id: str, position: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         [
             [
@@ -332,7 +332,7 @@ def __make_reorder_keyboard(stop_id: str, position: int) -> InlineKeyboardMarkup
     )
 
 
-def __get_reorder_list_message(
+def _get_reorder_list_message(
     get_stop_info: GetStopInfo, saved_stops: list[str], selected_pos: int
 ) -> str:
     """
@@ -371,10 +371,10 @@ async def reorder_select_handler(
     saved_stops = await app_state.user_data_adapter.get_saved_stops(chat_id)
     try:
         idx = saved_stops.index(selected_stop_id)
-        text = __get_reorder_list_message(
+        text = _get_reorder_list_message(
             app_state.bus_service.get_stop_info, saved_stops, idx
         )
-        reply_markup = __make_reorder_keyboard(selected_stop_id, idx)
+        reply_markup = _make_reorder_keyboard(selected_stop_id, idx)
         await query.answer()
         await query.edit_message_text(text, reply_markup=reply_markup)
 
@@ -387,7 +387,7 @@ async def reorder_select_handler(
         pass  # ignore errors due to same message being sent
 
 
-def __reorder_stops_list(saved_stops: list[str], pos: int, dir: str) -> list[str]:
+def _reorder_stops_list(saved_stops: list[str], pos: int, dir: str) -> list[str]:
     ls = saved_stops[::]
     target = saved_stops[pos]
     if dir == "0":  # move forward
@@ -428,7 +428,7 @@ async def reorder_stop_handler(
     if saved_stops[int(position)] != stop_id:
         # TODO show error about invalid data
         return
-    new_stops_order = __reorder_stops_list(saved_stops, int(position), direction)
+    new_stops_order = _reorder_stops_list(saved_stops, int(position), direction)
     await app_state.user_data_adapter.save_stops(chat_id, new_stops_order)
 
     await reorder_select_handler(update, context)

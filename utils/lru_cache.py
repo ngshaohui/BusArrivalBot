@@ -18,10 +18,10 @@ class LRUCache[T]:
     ttl: int = 20  # time in seconds
     item_limit: int = 100
 
-    def __is_expired(self, item: CacheItem[T]) -> bool:
+    def _is_expired(self, item: CacheItem[T]) -> bool:
         return int(time.time()) > item.expiry
 
-    def __touch(self, key: Hashable) -> None:
+    def _touch(self, key: Hashable) -> None:
         "re-insert key to update insertion order"
         item = self.item_cache.get(key, None)
         if item is not None:
@@ -32,10 +32,10 @@ class LRUCache[T]:
         item = self.item_cache.get(key, None)
         if item is None:
             return None
-        if self.__is_expired(item):
+        if self._is_expired(item):
             del self.item_cache[key]
             return None
-        self.__touch(key)
+        self._touch(key)
         return item.value
 
     def set(self, key: Hashable, value: T) -> None:
