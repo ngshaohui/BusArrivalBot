@@ -344,9 +344,9 @@ def __get_reorder_list_message(
     stop_info_iter = map(get_stop_info, saved_stops)
     for idx, stop_info in enumerate(stop_info_iter):
         if stop_info is not None:
-            marker = "🔴 " if idx == selected_pos else ""
+            marker = "➡️ " if idx == selected_pos else ""
             msg += f"{marker}{idx + 1}. {stop_info['BusStopCode']} | {stop_info['Description']}\n"
-    msg += "\n🔴 Currently selected stop"
+    msg += "\n➡️ Currently selected stop"
     return msg
 
 
