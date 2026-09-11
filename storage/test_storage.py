@@ -53,7 +53,7 @@ async def test_nonexistent_user(storage_utility: StorageUtility):
     """
     await storage_utility.save_stops(123456, ["123456"])
     stops = await storage_utility.get_saved_stops(999111)
-    assert stops == []
+    assert stops == None
 
 
 @pytest.mark.asyncio
@@ -77,6 +77,7 @@ async def test_check_user_exists(storage_utility: StorageUtility):
 @pytest.mark.asyncio
 async def test_check_default_user_settings_exist(storage_utility: StorageUtility):
     user_settings = await storage_utility.get_user_settings(123456)
+    assert user_settings is not None
     assert user_settings.show_load == False and user_settings.show_type == False
 
 
@@ -84,4 +85,5 @@ async def test_check_default_user_settings_exist(storage_utility: StorageUtility
 async def test_modify_user_settings(storage_utility: StorageUtility):
     await storage_utility.save_user_settings(123456, True, False)
     user_settings = await storage_utility.get_user_settings(123456)
+    assert user_settings is not None
     assert user_settings.show_load == True and user_settings.show_type == False

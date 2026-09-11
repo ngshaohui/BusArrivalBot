@@ -6,7 +6,7 @@ from telegram.ext import Application, CallbackQueryHandler, ContextTypes
 
 from bot_app_state import get_app_state
 from bus_service.bus_stops import GetStopInfo
-from storage.adapter import StorageUtility
+from user_data.adapter import UserDataAdapter
 from utils.bot_utils import get_chat_id
 from utils.constants import SETTINGS_ACTIONS, SYMBOLS_LEGEND
 from utils.custom_typings import UserSettings
@@ -67,7 +67,7 @@ async def settings_consent_handler(
         return  # ignore malformed requests
 
     app_state = get_app_state(context.application)
-    await app_state.storage_utility.add_user(chat_id)
+    await app_state.user_data_adapter.add_user(chat_id)
     await show_settings_handler(update, context)
 
 
@@ -105,7 +105,7 @@ async def revoke_consent_handler(
         return
 
     app_state = get_app_state(context.application)
-    await app_state.storage_utility.remove_user(chat_id)
+    await app_state.user_data_adapter.remove_user(chat_id)
 
     reply_msg = "User configuration settings will not be stored."
     await query.answer()
@@ -156,7 +156,7 @@ async def show_settings_handler(
         return  # ignore malformed requests
 
     app_state = get_app_state(context.application)
-    user_exists = await app_state.storage_utility.check_user_exists(chat_id)
+    user_exists = await app_state.user_data_adapter.check_user_exists(chat_id)
     if not user_exists:
         return await ask_consent(update, context)
 
@@ -171,8 +171,9 @@ async def show_settings_handler(
         )
 
 
+# TODO: make this take in update and context as per normal
 async def save_stop(
-    storage_utility: StorageUtility,
+    user_data_adapter: UserDataAdapter,
     get_stop_info: GetStopInfo,
     update: Update,
     stop_id: str,
@@ -180,7 +181,7 @@ async def save_stop(
     if update.message is None:
         return
 
-    user_exists = await storage_utility.check_user_exists(update.message.chat_id)
+    user_exists = await user_data_adapter.check_user_exists(update.message.chat_id)
     if not user_exists:
         return await settings_not_enabled_message(update)
 
@@ -189,7 +190,7 @@ async def save_stop(
         await update.message.reply_text("Unable to save unknown bus stop code")
         return
 
-    await storage_utility.save_stop(update.message.chat_id, stop_id)
+    await user_data_adapter.add_stop(update.message.chat_id, stop_id)
     # TODO use message formatter
     await update.message.reply_text(
         f"""Saved bus stop
@@ -230,11 +231,11 @@ async def remove_flow_handler(
         return
 
     app_state = get_app_state(context.application)
-    user_exists = await app_state.storage_utility.check_user_exists(chat_id)
+    user_exists = await app_state.user_data_adapter.check_user_exists(chat_id)
     if not user_exists:
         return await settings_not_enabled_message(update)
 
-    saved_stops = await app_state.storage_utility.get_saved_stops(chat_id)
+    saved_stops = await app_state.user_data_adapter.get_saved_stops(chat_id)
     if len(saved_stops) > 0:
         text = "Remove a stop from the list below:"
     else:
@@ -262,12 +263,12 @@ async def remove_stop_handler(
         return
 
     app_state = get_app_state(context.application)
-    user_exists = await app_state.storage_utility.check_user_exists(chat_id)
+    user_exists = await app_state.user_data_adapter.check_user_exists(chat_id)
     if not user_exists:
         return await settings_not_enabled_message(update)
 
     stop_id = query.data.split(",")[1]
-    await app_state.storage_utility.remove_stop(chat_id, stop_id)
+    await app_state.user_data_adapter.remove_stop(chat_id, stop_id)
 
     await remove_flow_handler(update, context)
 
@@ -284,11 +285,11 @@ async def reorder_flow_handler(
         return  # ignore malformed requests
 
     app_state = get_app_state(context.application)
-    user_exists = await app_state.storage_utility.check_user_exists(chat_id)
+    user_exists = await app_state.user_data_adapter.check_user_exists(chat_id)
     if not user_exists:
         return await settings_not_enabled_message(update)
 
-    saved_stops = await app_state.storage_utility.get_saved_stops(chat_id)
+    saved_stops = await app_state.user_data_adapter.get_saved_stops(chat_id)
     text = "Select a stop to reorder from the list below:"
     callback_buttons = __make_saved_stops_list(
         app_state.bus_service.get_stop_info,
@@ -352,13 +353,13 @@ async def reorder_select_handler(
         return  # ignore malformed requests
 
     app_state = get_app_state(context.application)
-    user_exists = await app_state.storage_utility.check_user_exists(chat_id)
+    user_exists = await app_state.user_data_adapter.check_user_exists(chat_id)
     if not user_exists:
         return await settings_not_enabled_message(update)
 
     selected_stop_id = query.data.split(",")[1]
 
-    saved_stops = await app_state.storage_utility.get_saved_stops(chat_id)
+    saved_stops = await app_state.user_data_adapter.get_saved_stops(chat_id)
     try:
         idx = saved_stops.index(selected_stop_id)
         text = __get_reorder_list_message(
@@ -408,18 +409,18 @@ async def reorder_stop_handler(
         return
 
     app_state = get_app_state(context.application)
-    user_exists = await app_state.storage_utility.check_user_exists(chat_id)
+    user_exists = await app_state.user_data_adapter.check_user_exists(chat_id)
     if not user_exists:
         return await settings_not_enabled_message(update)
 
     _, stop_id, position, direction = query.data.split(",")
-    saved_stops = await app_state.storage_utility.get_saved_stops(chat_id)
+    saved_stops = await app_state.user_data_adapter.get_saved_stops(chat_id)
     # validate the stop exists at that position
     if saved_stops[int(position)] != stop_id:
         # TODO show error about invalid data
         return
     new_stops_order = __reorder_stops_list(saved_stops, int(position), direction)
-    await app_state.storage_utility.save_stops(chat_id, new_stops_order)
+    await app_state.user_data_adapter.save_stops(chat_id, new_stops_order)
 
     await reorder_select_handler(update, context)
 
@@ -442,7 +443,7 @@ async def show_symbols_handler(
         return  # ignore malformed request
 
     app_state = get_app_state(context.application)
-    user_settings = await app_state.storage_utility.get_user_settings(chat_id)
+    user_settings = await app_state.user_data_adapter.get_user_settings(chat_id)
 
     # change config in settings
     parts = query.data.split(",")
@@ -451,13 +452,13 @@ async def show_symbols_handler(
         value = bool(int(parts[2]))
         match option:
             case SymbolOptions.SHOW_LOAD.value:
-                await app_state.storage_utility.save_user_settings(
+                await app_state.user_data_adapter.save_user_settings(
                     chat_id, value, user_settings.show_type
                 )
                 # preemptively use given value to display
                 user_settings = UserSettings(value, user_settings.show_type)
             case SymbolOptions.SHOW_TYPE.value:
-                await app_state.storage_utility.save_user_settings(
+                await app_state.user_data_adapter.save_user_settings(
                     chat_id, user_settings.show_load, value
                 )
                 user_settings = UserSettings(user_settings.show_load, value)

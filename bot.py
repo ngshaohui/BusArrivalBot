@@ -25,6 +25,7 @@ from reply_handlers.settings_handler import (
 from reply_handlers.text_reply_handler import message_handler
 from scripts import fetch_routes, fetch_stops
 from storage.adapter import StorageUtility
+from user_data.adapter import UserDataAdapter
 from utils.constants import APP_VERSION
 from utils.custom_typings import BusRoute, BusStop
 
@@ -112,9 +113,11 @@ def refresh_bus_service_adapter(bus_service_adapter: BusServiceAdapter):
 
 async def post_init(application: Application) -> None:
     # Init application state
+    storage_utility = await StorageUtility.create(in_memory=DEVELOPMENT_MODE)
     bus_service_adapter = BusServiceAdapter(
         *fetch_stops_and_routes(development_mode=DEVELOPMENT_MODE)
     )
+    user_data_adapter = UserDataAdapter(storage_utility)
 
     # Fetch new data once a week on Sundays
     scheduler = BackgroundScheduler()
@@ -126,8 +129,7 @@ async def post_init(application: Application) -> None:
         minute=0,
     )
     scheduler.start()
-    storage_utility = await StorageUtility.create(in_memory=DEVELOPMENT_MODE)
-    register_app_state(application, AppState(bus_service_adapter, storage_utility))
+    register_app_state(application, AppState(bus_service_adapter, user_data_adapter))
 
 
 def main() -> None:

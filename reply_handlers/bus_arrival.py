@@ -55,7 +55,7 @@ async def bus_stop_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         reply_msg = "Unknown bus stop code"
     (busses, user_settings) = await asyncio.gather(
         get_arriving_busses(stop_id),
-        app_state.storage_utility.get_user_settings(chat_id),
+        app_state.user_data_adapter.get_user_settings(chat_id),
     )
     if busses is None:
         reply_msg = (

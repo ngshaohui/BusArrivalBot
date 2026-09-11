@@ -20,7 +20,6 @@ class StorageUtility:
         self.con: aiosqlite.Connection = con
 
     @classmethod
-    # use classmethod to use async init
     async def create(cls, in_memory: bool = False) -> "StorageUtility":
         if in_memory:
             logger.info("Initializing new database from memory")
@@ -80,7 +79,7 @@ class StorageUtility:
             print(f"SQLite error: {e}")
             return False
 
-    async def get_saved_stops(self, chat_id: int) -> list[str]:
+    async def get_saved_stops(self, chat_id: int) -> list[str] | None:
         """
         get list of BusStopCode user has saved
         """
@@ -93,14 +92,16 @@ class StorageUtility:
             )
             # row: tuple[str] | None
             row = await cur.fetchone()
-            if row is None or row[0] == "":
+            if row is None:
+                return None
+            elif row[0] == "":
                 return []
             saved_stops = row[0].split(",")
             return saved_stops
         except aiosqlite.Error as e:
             # TODO log and handle error
             print(f"SQLite error: {e}")
-            return []
+            return None
 
     async def save_stops(self, chat_id: int, stops: list[str]) -> bool:
         """
@@ -125,28 +126,6 @@ class StorageUtility:
             print(f"SQLite error: {e}")
             return False
 
-    async def save_stop(self, chat_id: int, stop_id: str) -> bool:
-        """
-        add a single bus stop to the list of saved stops
-        """
-        saved_stops = await self.get_saved_stops(chat_id)
-        if stop_id in saved_stops:
-            # stop already exists
-            return False
-        return await self.save_stops(chat_id, saved_stops + [stop_id])
-
-    async def remove_stop(self, chat_id: int, stop_id: str) -> bool:
-        """
-        remove a single bus stop from the list of saved stops
-        """
-        saved_stops = await self.get_saved_stops(chat_id)
-        for idx, saved_stop_id in enumerate(saved_stops):
-            if stop_id == saved_stop_id:
-                return await self.save_stops(
-                    chat_id, saved_stops[:idx] + saved_stops[idx + 1 :]
-                )
-        return False
-
     async def save_user_settings(
         self, chat_id: int, show_load: int, show_type: int
     ) -> bool:
@@ -169,7 +148,7 @@ class StorageUtility:
             print(f"SQLite error: {e}")
             return False
 
-    async def get_user_settings(self, chat_id: int) -> UserSettings:
+    async def get_user_settings(self, chat_id: int) -> UserSettings | None:
         try:
             cur = await self.con.execute(
                 """
@@ -180,12 +159,12 @@ class StorageUtility:
             # row will be tuple[int, int] | None but aiosqlite typing doesn't allow trivial casting
             row = await cur.fetchone()
             if row is None:
-                return UserSettings(False, False)
+                return None
             return UserSettings(bool(row[0]), bool(row[1]))
         except aiosqlite.Error as e:
             # TODO log and handle error
             print(f"SQLite error: {e}")
-            return UserSettings(False, False)
+            return None
 
     async def remove_user(self, chat_id: int) -> bool:
         """

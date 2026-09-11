@@ -3,13 +3,14 @@ from telegram import InlineKeyboardMarkup, Update
 from bus_service.bus_stops import GetStopInfo
 from reply_handlers.inline_buttons import get_stop_inline_button
 from reply_handlers.settings_handler import settings_not_enabled_message
-from storage.adapter import StorageUtility
+from user_data.adapter import UserDataAdapter
 from utils.bot_utils import get_chat_id
 from utils.custom_typings import BusStop
 
 
+# TODO: make this take in update and context as per normal
 async def list_saved_stops(
-    storage_utility: StorageUtility,
+    user_data_adapter: UserDataAdapter,
     get_stop_info: GetStopInfo,
     update: Update,
 ) -> None:
@@ -21,11 +22,11 @@ async def list_saved_stops(
     if not chat_id or update.message is None:
         return  # ignore malformed requests
 
-    user_exists = await storage_utility.check_user_exists(update.message.chat_id)
+    user_exists = await user_data_adapter.check_user_exists(update.message.chat_id)
     if not user_exists:
         return await settings_not_enabled_message(update)
 
-    saved_stops = await storage_utility.get_saved_stops(chat_id)
+    saved_stops = await user_data_adapter.get_saved_stops(chat_id)
     stops: list[BusStop] = [
         stop for stop in map(get_stop_info, saved_stops) if stop is not None
     ]

@@ -49,14 +49,14 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     elif m := re.match(REGEX_ADD_STOP, msg_text, re.IGNORECASE):
         stop_code = m.group(1)
         await save_stop(
-            app_state.storage_utility,
+            app_state.user_data_adapter,
             app_state.bus_service.get_stop_info,
             update,
             stop_code,
         )
     elif re.match(REGEX_LIST_SAVED_STOPS, msg_text, re.IGNORECASE) is not None:
         await list_saved_stops(
-            app_state.storage_utility, app_state.bus_service.get_stop_info, update
+            app_state.user_data_adapter, app_state.bus_service.get_stop_info, update
         )
     else:
         # unknown command message
