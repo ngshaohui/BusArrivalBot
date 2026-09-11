@@ -22,11 +22,18 @@ You will need a bot token from `@BotFather` to host your own instance of the bot
 uv run storage/initialize.py
 ```
 
+### Setup
+
+```shell
+# install dependencies in `pyproject.toml`
+uv sync
+# install pre-commit hook
+uv run pre-commit install
+```
+
 ### Start bot
 
 Run an instance of the bot
-
-The dependencies in `pyproject.toml` will be installed automatically
 
 ```shell
 uv run bot.py
@@ -120,8 +127,6 @@ docker run --name bus-arrival-bot --rm bus-arrival-bot:0.3.1
 - [Feature] DB backup mechanism
 - [Feature] Paginate search query
 - [Feature] Compare common stops
-- [Optimization] Cache user_settings
-  - Implement a UserData adapter, much like BusServiceAdapter in order to add a cache
 - [Optimization] Reduce size of Dockerfile (currently 299.53 MB)
   - Can use `docker history <IMAGE_NAME>` to check which command adds how much size
 
