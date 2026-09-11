@@ -11,18 +11,12 @@ from reply_handlers.settings_handler import save_stop
 
 from .bus_arrival import REGEX_STOP_CODE, bus_stop_handler
 from .bus_route import REGEX_ROUTE, route_direction_handler
+from .saved_stops import REGEX_LIST_SAVED_STOPS
+from .settings_handler import REGEX_ADD_STOP
 
 # search opp heavy
 # /search pei
 REGEX_SEARCH = r"\/?search\s*(.*)"
-# add 42071
-# /add 43099
-# add_01019
-# /add_59159
-REGEX_ADD_STOP = r"\/?add[?:\s*|_](\d{5})"
-# list
-# /list
-REGEX_LIST_SAVED_STOPS = r"\/?list"
 
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -46,18 +40,10 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         query_str = m.group(1)
         query: list[str] = re.split(r"[\s\/\-]", query_str)
         await search(app_state.bus_service.search_possible_stops, message, query)
-    elif m := re.match(REGEX_ADD_STOP, msg_text, re.IGNORECASE):
-        stop_code = m.group(1)
-        await save_stop(
-            app_state.user_data_adapter,
-            app_state.bus_service.get_stop_info,
-            update,
-            stop_code,
-        )
+    elif re.match(REGEX_ADD_STOP, msg_text, re.IGNORECASE):
+        await save_stop(update, context)
     elif re.match(REGEX_LIST_SAVED_STOPS, msg_text, re.IGNORECASE) is not None:
-        await list_saved_stops(
-            app_state.user_data_adapter, app_state.bus_service.get_stop_info, update
-        )
+        await list_saved_stops(update, context)
     else:
         # unknown command message
         await unknown_command(message)

@@ -43,8 +43,7 @@ async def bus_stop_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         stop_id_candidate = query.data
     m = re.match(REGEX_STOP_CODE, stop_id_candidate)
     if m is None:
-        # TODO: handle malformed message
-        return
+        return  # unreachable, pacifying type checker
     stop_id = m.group(1)
 
     # craft message

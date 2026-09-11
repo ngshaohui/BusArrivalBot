@@ -1,3 +1,4 @@
+import re
 from enum import IntEnum, auto
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
@@ -6,7 +7,6 @@ from telegram.ext import Application, CallbackQueryHandler, ContextTypes
 
 from bot_app_state import get_app_state
 from bus_service.bus_stops import GetStopInfo
-from user_data.adapter import UserDataAdapter
 from utils.bot_utils import get_chat_id
 from utils.constants import SETTINGS_ACTIONS, SYMBOLS_LEGEND
 from utils.custom_typings import UserSettings
@@ -171,26 +171,35 @@ async def show_settings_handler(
         )
 
 
-# TODO: make this take in update and context as per normal
-async def save_stop(
-    user_data_adapter: UserDataAdapter,
-    get_stop_info: GetStopInfo,
-    update: Update,
-    stop_id: str,
-) -> None:
-    if update.message is None:
+# add 42071
+# /add 43099
+# add_01019
+# /add_59159
+REGEX_ADD_STOP = r"\/?add[?:\s*|_](\d{5})"
+
+
+async def save_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.message is None or update.message.text is None:
         return
 
-    user_exists = await user_data_adapter.check_user_exists(update.message.chat_id)
+    app_state = get_app_state(context.application)
+    user_exists = await app_state.user_data_adapter.check_user_exists(
+        update.message.chat_id
+    )
     if not user_exists:
         return await settings_not_enabled_message(update)
 
-    stop_info = get_stop_info(stop_id)
+    m = re.match(REGEX_ADD_STOP, update.message.text)
+    if m is None:
+        return  # unreachable, pacifying type checker
+    stop_id = m.group(1)
+
+    stop_info = app_state.bus_service.get_stop_info(stop_id)
     if stop_info is None:
         await update.message.reply_text("Unable to save unknown bus stop code")
         return
 
-    await user_data_adapter.add_stop(update.message.chat_id, stop_id)
+    await app_state.user_data_adapter.add_stop(update.message.chat_id, stop_id)
     # TODO use message formatter
     await update.message.reply_text(
         f"""Saved bus stop

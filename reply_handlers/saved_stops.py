@@ -1,19 +1,18 @@
 from telegram import InlineKeyboardMarkup, Update
+from telegram.ext import ContextTypes
 
-from bus_service.bus_stops import GetStopInfo
+from bot_app_state import get_app_state
 from reply_handlers.inline_buttons import get_stop_inline_button
 from reply_handlers.settings_handler import settings_not_enabled_message
-from user_data.adapter import UserDataAdapter
 from utils.bot_utils import get_chat_id
 from utils.custom_typings import BusStop
 
+# list
+# /list
+REGEX_LIST_SAVED_STOPS = r"\/?list"
 
-# TODO: make this take in update and context as per normal
-async def list_saved_stops(
-    user_data_adapter: UserDataAdapter,
-    get_stop_info: GetStopInfo,
-    update: Update,
-) -> None:
+
+async def list_saved_stops(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     displays the list of saved stops
     TODO: indicate when a saved stop is no longer present
@@ -22,13 +21,16 @@ async def list_saved_stops(
     if not chat_id or update.message is None:
         return  # ignore malformed requests
 
-    user_exists = await user_data_adapter.check_user_exists(update.message.chat_id)
+    app_state = get_app_state(context.application)
+    user_exists = await app_state.user_data_adapter.check_user_exists(chat_id)
     if not user_exists:
         return await settings_not_enabled_message(update)
 
-    saved_stops = await user_data_adapter.get_saved_stops(chat_id)
+    saved_stops = await app_state.user_data_adapter.get_saved_stops(chat_id)
     stops: list[BusStop] = [
-        stop for stop in map(get_stop_info, saved_stops) if stop is not None
+        stop
+        for stop in map(app_state.bus_service.get_stop_info, saved_stops)
+        if stop is not None
     ]
     # TODO: indicate when a saved stop is no longer present
 
