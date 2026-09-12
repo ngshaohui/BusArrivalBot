@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from telegram.ext import Application
 
 from bus_service.adapter import BusServiceAdapter
+from storage.adapter import StorageUtility
 from user_data.adapter import UserDataAdapter
 
 STATE_KEY = "appstate"
@@ -12,6 +13,7 @@ STATE_KEY = "appstate"
 class AppState:
     bus_service: BusServiceAdapter
     user_data_adapter: UserDataAdapter
+    _storage_utility: StorageUtility
 
 
 def register_app_state(application: Application, app_state: AppState) -> None:

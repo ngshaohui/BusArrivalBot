@@ -35,6 +35,9 @@ class StorageUtility:
 
         return cls(con)
 
+    async def shutdown(self):
+        await self.con.close()
+
     async def check_user_exists(self, chat_id: int) -> bool:
         """
         check if a user exists in the database

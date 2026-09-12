@@ -129,7 +129,14 @@ async def post_init(application: Application) -> None:
         minute=0,
     )
     scheduler.start()
-    register_app_state(application, AppState(bus_service_adapter, user_data_adapter))
+    register_app_state(
+        application, AppState(bus_service_adapter, user_data_adapter, storage_utility)
+    )
+
+
+async def post_shutdown(application: Application) -> None:
+    app_state = get_app_state(application)
+    await app_state._storage_utility.shutdown()
 
 
 def main() -> None:
@@ -140,6 +147,7 @@ def main() -> None:
         Application.builder()
         .token(config("BOT_TOKEN", cast=str))
         .post_init(post_init)
+        .post_shutdown(post_shutdown)
         .build()
     )
 
