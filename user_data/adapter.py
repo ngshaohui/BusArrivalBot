@@ -13,7 +13,7 @@ class _UserDoesNotExist:
     pass
 
 
-USER_DOES_NOT_EXIST = _UserDoesNotExist()
+USER_DOES_NOT_EXIST = _UserDoesNotExist()  # sentinel object
 
 
 class UserData(NamedTuple):
@@ -21,7 +21,14 @@ class UserData(NamedTuple):
     user_settings: UserSettings
 
 
-# TODO: need a semaphore for writes (per chat_id)
+class StripedLock:
+    def __init__(self):
+        self._locks = [asyncio.Lock() for _ in range(100)]
+
+    def shared_lock(self, chat_id: int) -> asyncio.Lock:
+        return self._locks[chat_id % 100]
+
+
 @dataclass
 class UserDataAdapter:
     storage_adapter: StorageUtility
@@ -30,6 +37,7 @@ class UserDataAdapter:
             ttl=SECONDS_IN_DAY, item_limit=500
         )
     )
+    _shared_key_locks: StripedLock = field(default_factory=StripedLock)
 
     async def get_user_data(
         self, chat_id: int, update_cache: bool = False
@@ -59,25 +67,27 @@ class UserDataAdapter:
 
     async def add_user(self, chat_id: int):
         "idempotent if the user already exists"
-        user_data = await self.get_user_data(chat_id)
-        if isinstance(user_data, UserData):
-            return
-        success = await self.storage_adapter.add_user(chat_id)
-        if success:
-            # update negative cache
-            await self.get_user_data(chat_id, True)
-        # TODO: handle error
+        async with self._shared_key_locks.shared_lock(chat_id):
+            user_data = await self.get_user_data(chat_id)
+            if isinstance(user_data, UserData):
+                return
+            success = await self.storage_adapter.add_user(chat_id)
+            if success:
+                # update negative cache
+                await self.get_user_data(chat_id, True)
+            # TODO: handle error
 
     async def remove_user(self, chat_id: int):
         "idempotent if the user does not exists"
-        user_data = await self.get_user_data(chat_id)
-        if isinstance(user_data, _UserDoesNotExist):
-            return
-        success = await self.storage_adapter.remove_user(chat_id)
-        if success:
-            # update negative cache
-            self._user_data_cache.set(chat_id, USER_DOES_NOT_EXIST)
-        # TODO: handle error
+        async with self._shared_key_locks.shared_lock(chat_id):
+            user_data = await self.get_user_data(chat_id)
+            if isinstance(user_data, _UserDoesNotExist):
+                return
+            success = await self.storage_adapter.remove_user(chat_id)
+            if success:
+                # update negative cache
+                self._user_data_cache.set(chat_id, USER_DOES_NOT_EXIST)
+            # TODO: handle error
 
     # saved_stops
 
@@ -92,51 +102,56 @@ class UserDataAdapter:
         idempotent if the user does not exist
         idempotent if stop already exists
         """
-        user_data = await self.get_user_data(chat_id)
-        if isinstance(user_data, _UserDoesNotExist):
-            return
-        if stop_id in user_data.saved_stops:
-            return
-        new_saved_stops = user_data.saved_stops + [stop_id]
-        success = await self.storage_adapter.save_stops(chat_id, new_saved_stops)
-        if success:
-            self._user_data_cache.set(
-                chat_id, UserData(new_saved_stops, user_data.user_settings)
-            )
-        # TODO: handle error
+        async with self._shared_key_locks.shared_lock(chat_id):
+            user_data = await self.get_user_data(chat_id)
+            if isinstance(user_data, _UserDoesNotExist):
+                return
+            if stop_id in user_data.saved_stops:
+                return
+            new_saved_stops = user_data.saved_stops + [stop_id]
+            success = await self.storage_adapter.save_stops(chat_id, new_saved_stops)
+            if success:
+                self._user_data_cache.set(
+                    chat_id, UserData(new_saved_stops, user_data.user_settings)
+                )
+            # TODO: handle error
 
     async def save_stops(self, chat_id: int, stop_ids: list[str]):
         """
         idempotent if the user does not exist
         """
-        user_data = await self.get_user_data(chat_id)
-        if isinstance(user_data, _UserDoesNotExist):
-            return
-        success = await self.storage_adapter.save_stops(chat_id, stop_ids)
-        if success:
-            self._user_data_cache.set(
-                chat_id, UserData(stop_ids, user_data.user_settings)
-            )
-        # TODO: handle error
+        async with self._shared_key_locks.shared_lock(chat_id):
+            user_data = await self.get_user_data(chat_id)
+            if isinstance(user_data, _UserDoesNotExist):
+                return
+            success = await self.storage_adapter.save_stops(chat_id, stop_ids)
+            if success:
+                self._user_data_cache.set(
+                    chat_id, UserData(stop_ids, user_data.user_settings)
+                )
+            # TODO: handle error
 
     async def remove_stop(self, chat_id: int, stop_id: str):
         """
         idempotent if the user does not exist
         idempotent if stop does not exist
         """
-        user_data = await self.get_user_data(chat_id)
-        if isinstance(user_data, _UserDoesNotExist):
-            return
-        saved_stops = user_data.saved_stops
-        for idx, saved_stop_id in enumerate(saved_stops):
-            if stop_id == saved_stop_id:
-                new_stop_ids = saved_stops[:idx] + saved_stops[idx + 1 :]
-                success = await self.storage_adapter.save_stops(chat_id, new_stop_ids)
-                if success:
-                    self._user_data_cache.set(
-                        chat_id, UserData(new_stop_ids, user_data.user_settings)
+        async with self._shared_key_locks.shared_lock(chat_id):
+            user_data = await self.get_user_data(chat_id)
+            if isinstance(user_data, _UserDoesNotExist):
+                return
+            saved_stops = user_data.saved_stops
+            for idx, saved_stop_id in enumerate(saved_stops):
+                if stop_id == saved_stop_id:
+                    new_stop_ids = saved_stops[:idx] + saved_stops[idx + 1 :]
+                    success = await self.storage_adapter.save_stops(
+                        chat_id, new_stop_ids
                     )
-                # TODO: handle error
+                    if success:
+                        self._user_data_cache.set(
+                            chat_id, UserData(new_stop_ids, user_data.user_settings)
+                        )
+                    # TODO: handle error
 
     # user_settings
 
@@ -150,15 +165,16 @@ class UserDataAdapter:
         """
         idempotent if the user does not exist
         """
-        user_data = await self.get_user_data(chat_id)
-        if isinstance(user_data, _UserDoesNotExist):
-            return
-        success = await self.storage_adapter.save_user_settings(
-            chat_id, int(show_load), int(show_type)
-        )
-        if success:
-            self._user_data_cache.set(
-                chat_id,
-                UserData(user_data.saved_stops, UserSettings(show_load, show_type)),
+        async with self._shared_key_locks.shared_lock(chat_id):
+            user_data = await self.get_user_data(chat_id)
+            if isinstance(user_data, _UserDoesNotExist):
+                return
+            success = await self.storage_adapter.save_user_settings(
+                chat_id, int(show_load), int(show_type)
             )
-        # TODO: handle error
+            if success:
+                self._user_data_cache.set(
+                    chat_id,
+                    UserData(user_data.saved_stops, UserSettings(show_load, show_type)),
+                )
+            # TODO: handle error

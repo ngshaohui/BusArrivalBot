@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 import pytest_asyncio
 
@@ -11,8 +13,12 @@ NON_EXISTENT_USER = 654321
 
 
 @pytest_asyncio.fixture
-async def user_data_adapter():
-    storage_utility = await StorageUtility.create(in_memory=True)
+async def storage_utility():
+    return await StorageUtility.create(in_memory=True)
+
+
+@pytest_asyncio.fixture
+async def user_data_adapter(storage_utility):
     user_data_adapter = UserDataAdapter(storage_utility)
     await user_data_adapter.add_user(EXISTING_USER)
     await user_data_adapter.save_user_settings(EXISTING_USER, True, False)
@@ -100,6 +106,24 @@ async def test_add_and_remove_stop(user_data_adapter: UserDataAdapter):
     await user_data_adapter.remove_stop(EXISTING_USER, "222777")
     stops = await user_data_adapter.get_saved_stops(EXISTING_USER)
     assert stops == ["333444"]
+
+
+@pytest.mark.asyncio
+async def test_concurrent_add_stops(
+    storage_utility: StorageUtility, user_data_adapter: UserDataAdapter
+):
+    await asyncio.gather(
+        user_data_adapter.add_stop(EXISTING_USER, "1"),
+        user_data_adapter.add_stop(EXISTING_USER, "2"),
+        user_data_adapter.add_stop(EXISTING_USER, "3"),
+        user_data_adapter.add_stop(EXISTING_USER, "4"),
+    )
+
+    adapter_stops = await user_data_adapter.get_saved_stops(EXISTING_USER)
+    assert len(adapter_stops) == 4
+
+    storage_stops = await storage_utility.get_saved_stops(EXISTING_USER)
+    assert storage_stops == adapter_stops
 
 
 @pytest.mark.asyncio
