@@ -113,13 +113,12 @@ docker run --name bus-arrival-bot --rm bus-arrival-bot:0.3.1
 
 ### Milestone 7
 
-- [~] Refactor into modules by functional responsbility
-  - Can split up `reply_handlers.settings_handler.py` further
+- [x] Refactor into modules by functional responsbility
 
 ### Milestone 8
 
 - [x] [Precommit hooks](https://docs.astral.sh/uv/guides/integration/pre-commit/)
-- [ ] CI/CD tests
+- [x] CI/CD
 
 ### Work
 
