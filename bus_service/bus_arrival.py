@@ -63,3 +63,11 @@ def get_arrival_time_mins(
     unix_time = int(dt.timestamp())
     time_diff_seconds = max(0, unix_time - cur_unix_time)
     return time_diff_seconds // 60
+
+
+def get_arrival_time_seconds(
+    bus_arrival_time: TimestampISO8601, cur_unix_time: int
+) -> int:
+    dt = datetime.fromisoformat(bus_arrival_time)
+    unix_time = int(dt.timestamp())
+    return max(0, unix_time - cur_unix_time)

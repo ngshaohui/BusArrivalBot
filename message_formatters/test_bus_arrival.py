@@ -95,6 +95,8 @@ def test_arrival():
     msg = next_bus_msg(STOPS[0], BUS_123, 1736351595, UserSettings(False, False))
     expected_str = """Resorts World Sentosa | 14519
 
+123 (5 min)  > 123 (27 min)
+
 123
 5 min  |  27 min  |  N.A.
 
