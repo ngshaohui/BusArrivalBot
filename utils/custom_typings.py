@@ -54,3 +54,4 @@ class BusArrivalServiceResponse(TypedDict):
 class UserSettings(NamedTuple):
     show_load: bool
     show_type: bool
+    show_arrival_sequence: bool

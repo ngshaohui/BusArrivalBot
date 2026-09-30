@@ -29,7 +29,8 @@ async def init(con: aiosqlite.Connection):
                 REFERENCES users(chat_id)
                 ON DELETE CASCADE,
             show_load INTEGER NOT NULL DEFAULT 0,
-            show_type INTEGER NOT NULL DEFAULT 0
+            show_type INTEGER NOT NULL DEFAULT 0,
+            show_arrival_sequence INTEGER NOT NULL DEFAULT 0
         );
         """)
         await con.commit()

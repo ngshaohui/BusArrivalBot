@@ -1,8 +1,7 @@
 import datetime
 import zoneinfo
 
-# from bus_service.bus_arrival import get_arrival_time_mins
-from bus_service.bus_arrival import get_arrival_time_seconds
+from bus_service.bus_arrival import get_arrival_time_mins
 from utils.custom_typings import BusInfo, BusStop, NextBusInfo, UserSettings
 
 # TODO need to refer to documentation on how to serve this information in a standardized manner
@@ -13,7 +12,6 @@ BUS_LOAD = {
     "LSD": "🔴",  # Limited Standing
 }
 BUS_TYPE = {"BD": "BD", "DD": "DD"}
-
 
 def bus_arrivals_msg(
     bus: BusInfo, cur_unix_time: int, user_settings: UserSettings
@@ -48,13 +46,10 @@ def get_arrival_time(arrival_time: str, cur_unix_time: int) -> str:
     if arrival_time == "":
         return "N.A."
 
-    arrival_time_seconds = get_arrival_time_seconds(arrival_time, cur_unix_time)
+    arrival_time_mins = get_arrival_time_mins(arrival_time, cur_unix_time)
 
-    if arrival_time_seconds < 60:
+    if arrival_time_mins < 1:
         return "Arr."
-
-    # arrival_time_mins = get_arrival_time_mins(arrival_time, cur_unix_time)
-    arrival_time_mins = arrival_time_seconds // 60
 
     return f"{arrival_time_mins} min"
 
@@ -74,7 +69,10 @@ def next_bus_msg(
     if len(services) == 0:
         return f"{title}\n\nNo service information"
 
-    arrival_sequence = bus_arrival_sequence(services, cur_unix_time)
+    if user_settings.show_arrival_sequence == True:
+        arrival_sequence = bus_arrival_sequence(services, cur_unix_time)
+    else:
+        arrival_sequence = ""
 
     arrivals = [
         bus_arrivals_msg(bus_service, cur_unix_time, user_settings)
@@ -87,10 +85,6 @@ def next_bus_msg(
     return f"{title}\n\n{arrival_sequence}\n\n{arrivals_text}\n\nLast refreshed {formatted_datetime}"
 
 
-# (1) bus_arrival_sequence
-# (2) get_arrival_time_seconds
-# (3) write a test
-# (4 - final) add it into next_bus_msg
 def bus_arrival_sequence(services: list[BusInfo], cur_unix_time: int) -> str:
     buses_in_sequence = []
     for service in services:
@@ -102,13 +96,11 @@ def bus_arrival_sequence(services: list[BusInfo], cur_unix_time: int) -> str:
             if arrival_time == "":
                 continue
 
-            arrival_time_seconds = get_arrival_time_seconds(arrival_time, cur_unix_time)
-
-            buses_in_sequence.append((arrival_time_seconds, service_no, arrival_time))
+            buses_in_sequence.append((arrival_time, service_no))
 
     buses_in_sequence.sort()
 
     return "  > ".join(
-        f"{bus[1]} ({get_arrival_time(bus[2], cur_unix_time)})"
+        f"{bus[1]} ({get_arrival_time(bus[0], cur_unix_time)})"
         for bus in buses_in_sequence[:3]
     )

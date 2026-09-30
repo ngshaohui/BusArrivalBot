@@ -130,19 +130,20 @@ class StorageUtility:
             return False
 
     async def save_user_settings(
-        self, chat_id: int, show_load: int, show_type: int
+        self, chat_id: int, show_load: int, show_type: int, show_arrival_sequence: int
     ) -> bool:
         try:
             await self.con.execute(
                 """
-                INSERT INTO user_settings (chat_id, show_load, show_type)
-                VALUES (?, ?, ?)
+                INSERT INTO user_settings (chat_id, show_load, show_type, show_arrival_sequence)
+                VALUES (?, ?, ?, ?)
                 ON CONFLICT(chat_id)
                 DO UPDATE SET
                     show_load = excluded.show_load,
-                    show_type = excluded.show_type;
+                    show_type = excluded.show_type,
+                    show_arrival_sequence = excluded.show_arrival_sequence;
                 """,
-                (chat_id, show_load, show_type),
+                (chat_id, show_load, show_type, show_arrival_sequence),
             )
             await self.con.commit()
             return True
@@ -155,7 +156,7 @@ class StorageUtility:
         try:
             cur = await self.con.execute(
                 """
-            SELECT show_load, show_type FROM user_settings WHERE chat_id = ?
+            SELECT show_load, show_type, show_arrival_sequence FROM user_settings WHERE chat_id = ?
             """,
                 (chat_id,),
             )
@@ -163,7 +164,7 @@ class StorageUtility:
             row = await cur.fetchone()
             if row is None:
                 return None
-            return UserSettings(bool(row[0]), bool(row[1]))
+            return UserSettings(bool(row[0]), bool(row[1]), bool(row[2]))
         except aiosqlite.Error as e:
             # TODO log and handle error
             print(f"SQLite error: {e}")

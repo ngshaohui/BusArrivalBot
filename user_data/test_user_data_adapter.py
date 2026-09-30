@@ -21,7 +21,7 @@ async def storage_utility():
 async def user_data_adapter(storage_utility):
     user_data_adapter = UserDataAdapter(storage_utility)
     await user_data_adapter.add_user(EXISTING_USER)
-    await user_data_adapter.save_user_settings(EXISTING_USER, True, False)
+    await user_data_adapter.save_user_settings(EXISTING_USER, True, False, False)
     return user_data_adapter
 
 
@@ -130,35 +130,35 @@ async def test_concurrent_add_stops(
 async def test_get_user_settings(
     user_data_adapter: UserDataAdapter,
 ):
-    "data set up by fixture UserSettings(True, False)"
+    "data set up by fixture UserSettings(True, False, False)"
     user_settings = await user_data_adapter.get_user_settings(EXISTING_USER)
-    assert user_settings == UserSettings(True, False)
+    assert user_settings == UserSettings(True, False, False)
 
 
 @pytest.mark.asyncio
 async def test_get_user_settings_non_existent_user(
     user_data_adapter: UserDataAdapter,
 ):
-    "should give default UserSettings(False, False)"
+    "should give default UserSettings(False, False, False)"
     user_settings = await user_data_adapter.get_user_settings(NON_EXISTENT_USER)
-    assert user_settings == UserSettings(False, False)
+    assert user_settings == UserSettings(False, False, False)
 
 
 @pytest.mark.asyncio
 async def test_change_user_settings(
     user_data_adapter: UserDataAdapter,
 ):
-    "idempotent, should give default UserSettings(False, False)"
-    await user_data_adapter.save_user_settings(EXISTING_USER, True, True)
+    "idempotent, should give default UserSettings(False, False, False)"
+    await user_data_adapter.save_user_settings(EXISTING_USER, True, True, True)
     user_settings = await user_data_adapter.get_user_settings(EXISTING_USER)
-    assert user_settings == UserSettings(True, True)
+    assert user_settings == UserSettings(True, True, True)
 
 
 @pytest.mark.asyncio
 async def test_change_user_settings_non_existent_user(
     user_data_adapter: UserDataAdapter,
 ):
-    "idempotent, should give default UserSettings(False, False)"
-    await user_data_adapter.save_user_settings(NON_EXISTENT_USER, True, True)
+    "idempotent, should give default UserSettings(False, False, False)"
+    await user_data_adapter.save_user_settings(NON_EXISTENT_USER, True, True, True)
     user_settings = await user_data_adapter.get_user_settings(NON_EXISTENT_USER)
-    assert user_settings == UserSettings(False, False)
+    assert user_settings == UserSettings(False, False, False)

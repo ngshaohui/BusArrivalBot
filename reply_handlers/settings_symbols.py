@@ -15,6 +15,7 @@ from .inline_buttons import BACK_TO_SETTINGS_BUTTON
 class SymbolOptions(IntEnum):
     SHOW_LOAD = auto()
     SHOW_TYPE = auto()
+    SHOW_ARRIVAL_SEQUENCE = auto()
 
 
 async def show_symbols_handler(
@@ -40,19 +41,25 @@ async def show_symbols_handler(
         match option:
             case SymbolOptions.SHOW_LOAD.value:
                 await app_state.user_data_adapter.save_user_settings(
-                    chat_id, value, user_settings.show_type
+                    chat_id, value, user_settings.show_type, user_settings.show_arrival_sequence
                 )
                 # preemptively use given value to display
-                user_settings = UserSettings(value, user_settings.show_type)
+                user_settings = UserSettings(value, user_settings.show_type, user_settings.show_arrival_sequence)
             case SymbolOptions.SHOW_TYPE.value:
                 await app_state.user_data_adapter.save_user_settings(
-                    chat_id, user_settings.show_load, value
+                    chat_id, user_settings.show_load, value, user_settings.show_arrival_sequence
                 )
-                user_settings = UserSettings(user_settings.show_load, value)
+                user_settings = UserSettings(user_settings.show_load, value, user_settings.show_arrival_sequence)
+            case SymbolOptions.SHOW_ARRIVAL_SEQUENCE.value:
+                await app_state.user_data_adapter.save_user_settings(
+                    chat_id, user_settings.show_load, user_settings.show_type, value
+                )
+                user_settings = UserSettings(user_settings.show_load, user_settings.show_type, value)
 
     text = f"""Show symbols for bus arrival information
 Bus **Load** (**{"enabled ✅" if user_settings.show_load else "disabled"}**)
 Bus Type (**{"enabled ✅" if user_settings.show_type else "disabled"}**)
+Bus Arrival Sequence (**{"enabled ✅" if user_settings.show_arrival_sequence else "disabled"}**)
 
 {SYMBOLS_LEGEND}"""
 
@@ -68,6 +75,12 @@ Bus Type (**{"enabled ✅" if user_settings.show_type else "disabled"}**)
                 InlineKeyboardButton(
                     f"{'Enable' if not user_settings.show_type else 'Disable'} Bus Type",
                     callback_data=f"{SETTINGS_ACTIONS.SYMBOL_SHOW.value},{SymbolOptions.SHOW_TYPE.value},{int(not user_settings.show_type)}",
+                )
+            ],
+                        [
+                InlineKeyboardButton(
+                    f"{'Enable' if not user_settings.show_arrival_sequence else 'Disable'} Bus Arrival Sequence",
+                    callback_data=f"{SETTINGS_ACTIONS.SYMBOL_SHOW.value},{SymbolOptions.SHOW_ARRIVAL_SEQUENCE.value},{int(not user_settings.show_arrival_sequence)}",
                 )
             ],
             BACK_TO_SETTINGS_BUTTON,
