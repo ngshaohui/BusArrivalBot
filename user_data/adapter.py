@@ -161,7 +161,13 @@ class UserDataAdapter:
             return user_data.user_settings
         return UserSettings(False, False, False)  # default user settings
 
-    async def save_user_settings(self, chat_id: int, show_load: bool, show_type: bool, show_arrival_sequence: bool):
+    async def save_user_settings(
+        self,
+        chat_id: int,
+        show_load: bool,
+        show_type: bool,
+        show_arrival_sequence: bool,
+    ):
         """
         idempotent if the user does not exist
         """
@@ -175,6 +181,9 @@ class UserDataAdapter:
             if success:
                 self._user_data_cache.set(
                     chat_id,
-                    UserData(user_data.saved_stops, UserSettings(show_load, show_type, show_arrival_sequence)),
+                    UserData(
+                        user_data.saved_stops,
+                        UserSettings(show_load, show_type, show_arrival_sequence),
+                    ),
                 )
             # TODO: handle error

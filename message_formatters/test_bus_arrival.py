@@ -101,11 +101,12 @@ def test_arrival():
 Last refreshed 8 Jan 11.53PM"""
     assert msg == expected_str
 
+
 def test_arrival_sequence():
     msg = next_bus_msg(STOPS[0], BUS_123, 1736351595, UserSettings(False, False, True))
     expected_str = """Resorts World Sentosa | 14519
 
-123 (5 min)  > 123 (27 min)
+123 (5 min) → 123 (27 min)
 
 123
 5 min  |  27 min  |  N.A.
