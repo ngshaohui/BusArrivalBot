@@ -69,11 +69,6 @@ def next_bus_msg(
     if len(services) == 0:
         return f"{title}\n\nNo service information"
 
-    if user_settings.show_arrival_sequence == True:
-        arrival_sequence = bus_arrival_sequence(services, cur_unix_time)
-    else:
-        arrival_sequence = ""
-
     arrivals = [
         bus_arrivals_msg(bus_service, cur_unix_time, user_settings)
         for bus_service in services
@@ -82,7 +77,12 @@ def next_bus_msg(
     formatted_datetime = datetime.datetime.fromtimestamp(
         cur_unix_time, tz=zoneinfo.ZoneInfo("Asia/Singapore")
     ).strftime("%-d %b %-I.%M%p")
-    return f"{title}\n\n{arrival_sequence}\n\n{arrivals_text}\n\nLast refreshed {formatted_datetime}"
+    
+    if user_settings.show_arrival_sequence == True:
+        arrival_sequence = bus_arrival_sequence(services, cur_unix_time)
+        return f"{title}\n\n{arrival_sequence}\n\n{arrivals_text}\n\nLast refreshed {formatted_datetime}"
+    else:
+        return f"{title}\n\n{arrivals_text}\n\nLast refreshed {formatted_datetime}"
 
 
 def bus_arrival_sequence(services: list[BusInfo], cur_unix_time: int) -> str:
