@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from scipy.spatial import KDTree
 
+from utils.checksum import get_dict_list_checksum
 from utils.custom_typings import BusStop, Coordinate
 
 from .bus_stop_search_map import transform_query_token
@@ -17,6 +18,7 @@ type SearchPossibleStops = Callable[[list[str]], list[BusStop]]
 @dataclass
 class BusStopUtility:
     stops: list[BusStop]
+    stops_checksum: str = field(init=False)
 
     stop_coordinates: list[Coordinate] = field(init=False)
     kd_tree: KDTree = field(init=False)
@@ -28,6 +30,7 @@ class BusStopUtility:
 
     def create(self, stops: list[BusStop]) -> None:
         self.stops = stops
+        self.stops_checksum = get_dict_list_checksum(stops)
         self.stop_coordinates = [
             (stop["Latitude"], stop["Longitude"]) for stop in stops
         ]

@@ -15,8 +15,10 @@ from telegram.ext import (
 
 from bot_app_state import AppState, get_app_state, register_app_state
 from bus_service.adapter import BusServiceAdapter
+from bus_service.bus_stops import BusStopUtility
 from reply_handlers.bus_arrival import REGEX_STOP_CODE, bus_stop_handler
 from reply_handlers.bus_route import route_direction_handler
+from reply_handlers.bus_stop_search import REGEX_SEARCH_CALLBACK, handle_search
 from reply_handlers.inline_buttons import get_stop_inline_button
 from reply_handlers.settings_handler import (
     register_settings_handlers,
@@ -102,11 +104,15 @@ def fetch_stops_and_routes(
     return bus_stops, bus_routes
 
 
-def refresh_bus_service_adapter(bus_service_adapter: BusServiceAdapter):
+def refresh_api_data(
+    bus_service_adapter: BusServiceAdapter, bus_stop_utility: BusStopUtility
+):
     """refreshes the service integrator"""
 
     def refresh() -> None:
-        bus_service_adapter.refresh(*fetch_stops_and_routes())
+        stops, routes = fetch_stops_and_routes(development_mode=DEVELOPMENT_MODE)
+        bus_stop_utility.create(stops)
+        bus_service_adapter.refresh(stops, routes)
 
     return refresh
 
@@ -114,23 +120,25 @@ def refresh_bus_service_adapter(bus_service_adapter: BusServiceAdapter):
 async def post_init(application: Application) -> None:
     # Init application state
     storage_utility = await StorageUtility.create(in_memory=DEVELOPMENT_MODE)
-    bus_service_adapter = BusServiceAdapter(
-        *fetch_stops_and_routes(development_mode=DEVELOPMENT_MODE)
-    )
+    stops, routes = fetch_stops_and_routes(development_mode=DEVELOPMENT_MODE)
+    bus_service_adapter = BusServiceAdapter(stops, routes)
+    bus_stop_utility = BusStopUtility(stops)
     user_data_adapter = UserDataAdapter(storage_utility)
 
     # Fetch new data once a week on Sundays
     scheduler = BackgroundScheduler()
     scheduler.add_job(
-        refresh_bus_service_adapter(bus_service_adapter),
+        refresh_api_data(bus_service_adapter, bus_stop_utility),
         trigger="cron",
-        day_of_week="sun",
-        hour=0,
+        hour=4,
         minute=0,
     )
     scheduler.start()
     register_app_state(
-        application, AppState(bus_service_adapter, user_data_adapter, storage_utility)
+        application,
+        AppState(
+            bus_service_adapter, bus_stop_utility, user_data_adapter, storage_utility
+        ),
     )
 
 
@@ -161,6 +169,9 @@ def main() -> None:
     application.add_handler(MessageHandler(filters.LOCATION, location_handler))
     application.add_handler(
         CallbackQueryHandler(bus_stop_handler, pattern=REGEX_STOP_CODE)
+    )
+    application.add_handler(
+        CallbackQueryHandler(handle_search, pattern=REGEX_SEARCH_CALLBACK)
     )
     application.add_handler(
         CallbackQueryHandler(route_direction_handler, pattern=r"\d{1,3}\w?\,[12]")

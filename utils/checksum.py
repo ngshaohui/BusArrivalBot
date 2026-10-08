@@ -4,9 +4,6 @@ from functools import reduce
 
 
 def _get_dict_hash(d: Mapping[str, object]) -> bytes:
-    """
-    calculate hash digest from a dict
-    """
     msg = hashlib.sha3_256()
     for v in d.values():
         if isinstance(v, str):
@@ -23,6 +20,7 @@ def _xor_bytes(bytes1: bytes, bytes2: bytes) -> bytes:
 def get_dict_list_checksum(ls: Sequence[Mapping[str, object]]) -> str:
     """
     calculate checksum of list of dict objects
+    truncates to first 8 characters of checksum
     """
     if len(ls) == 0:
         msg = hashlib.sha3_256()
@@ -30,4 +28,4 @@ def get_dict_list_checksum(ls: Sequence[Mapping[str, object]]) -> str:
         return msg.digest().hex()
 
     checksum_bytes = reduce(_xor_bytes, map(_get_dict_hash, ls))
-    return checksum_bytes.hex()
+    return checksum_bytes.hex()[:8]
