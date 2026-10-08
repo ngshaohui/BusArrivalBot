@@ -1,9 +1,9 @@
 import random
-import unittest
+from copy import deepcopy
 
 from utils.custom_typings import BusStop
 
-from .fetch_stops import bus_stops_checksum
+from .checksum import get_dict_list_checksum
 
 STOPS: list[BusStop] = [
     {
@@ -14,7 +14,7 @@ STOPS: list[BusStop] = [
         "Longitude": 103.82570322127442,
     },
     {
-        "BusStopCode": "45029",  # closest
+        "BusStopCode": "45029",
         "RoadName": "Woodlands Rd",
         "Description": "Opp Heavy Veh Pk",
         "Latitude": 1.39303959514259,
@@ -50,18 +50,27 @@ STOPS: list[BusStop] = [
     },
 ]
 
-# TODO test for stop attribute changes in one/more of the fields
+
+def test_empty_lists():
+    assert get_dict_list_checksum([]) == get_dict_list_checksum([])
 
 
-class TestFetchStopsChecksum(unittest.TestCase):
-    def test_shuffled(self):
-        hashes: list[str] = []
-        for _ in range(10):
-            random.shuffle(STOPS)
-            hashes.append(bus_stops_checksum(STOPS))
-        # ensure all hashes in list are the same
-        self.assertEqual(len(set(hashes)), 1)
+def test_empty_dictionaries():
+    assert get_dict_list_checksum([{}]) == get_dict_list_checksum([{}])
+    assert get_dict_list_checksum([{}, {}]) == get_dict_list_checksum([{}, {}])
+    assert get_dict_list_checksum([]) != get_dict_list_checksum([{}])
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_shuffled_bus_stops():
+    hashes: set[str] = set()
+    for _ in range(10):
+        random.shuffle(STOPS)
+        hashes.add(get_dict_list_checksum(STOPS))
+    # ensure all hashes in list are the same
+    assert len(hashes) == 1
+
+
+def test_change_in_attribute():
+    ls = deepcopy(STOPS)
+    ls[0]["Description"] = "this changed"
+    assert get_dict_list_checksum(STOPS) != get_dict_list_checksum(ls)

@@ -1,43 +1,18 @@
 # Run this script to get an updated routes.json
 
 import datetime
-import hashlib
 import json
 import logging
-from functools import reduce
 
 import httpx
 from decouple import config
 
+from utils.checksum import get_dict_list_checksum
 from utils.custom_typings import BusRoute
 
 logger = logging.getLogger(__name__)
 
 URL_GET_ALL_ROUTES = "https://datamall2.mytransport.sg/ltaodataservice/BusRoutes"
-
-
-def get_route_hash(stop: BusRoute) -> bytes:
-    """
-    calculate hash digest from a string
-    """
-    msg = hashlib.sha3_256()
-    str_values = (str(attr).encode() for attr in stop.values())
-    for val in str_values:
-        msg.update(val)
-    return msg.digest()
-
-
-def xor_bytes(bytes1: bytes, bytes2: bytes) -> bytes:
-    return bytes([b1 ^ b2 for b1, b2 in zip(bytes1, bytes2)])
-
-
-def bus_routes_checksum(stops: list[BusRoute]) -> str:
-    """
-    calculate checksum of list of stops
-    """
-    # no need to sort first since we rely on xor
-    checksum_bytes = reduce(xor_bytes, map(get_route_hash, stops))
-    return checksum_bytes.hex()
 
 
 def fetch_routes() -> list[BusRoute]:
@@ -60,14 +35,14 @@ def fetch_routes() -> list[BusRoute]:
 
 def run() -> list[BusRoute]:
     routes = fetch_routes()
-    checksum = bus_routes_checksum(routes)
+    checksum = get_dict_list_checksum(routes)
     logger.info(f"Fetched {len(routes)} bus routes (checksum: {checksum})")
     return routes
 
 
 def main():
     routes = run()
-    checksum = bus_routes_checksum(routes)
+    checksum = get_dict_list_checksum(routes)
     cur_timestamp = datetime.datetime.now(datetime.UTC).isoformat()
     with open("bus_routes.json", "w") as outfile:
         json.dump(
