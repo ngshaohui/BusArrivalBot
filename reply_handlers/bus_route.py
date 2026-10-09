@@ -8,11 +8,19 @@ from bot_app_state import get_app_state
 from message_formatters.bus_route import bus_route_msg
 from utils.bot_utils import get_chat_id
 
+# route
+# /route
+REGEX_ROUTE_DANGLING = r"^\/?route$"  # dangling keywords without the bus number
 # 67
 # /961M
 # route 2
 # /route 307E
-REGEX_ROUTE = r"^\/?(route)?\s*(\d{1,3}[A-Za-z]?)$"
+REGEX_ROUTE = r"^\/?(?:route)?\s*(\d{1,3}[A-Za-z]?)$"
+
+_USER_ERR_MSG_DANGLING_ROUTE_COMMAND = """A valid bus number is required for displaying bus route
+
+E.g. `route 67`
+"""
 
 
 async def route_direction_handler(
@@ -32,6 +40,15 @@ async def route_direction_handler(
     has_message = message is not None and message.text is not None
     has_query = query is not None and query.data is not None
 
+    # check for dangling route command
+    if has_message:
+        m = re.match(REGEX_ROUTE_DANGLING, message.text)
+        if m is not None:
+            await message.reply_text(
+                text=_USER_ERR_MSG_DANGLING_ROUTE_COMMAND, parse_mode="Markdown"
+            )
+
+    # obtain bus number and direction
     # TODO: can optimize this since has_query will always return valid bus_number
     bus_number_candidate = ""
     direction = 1
@@ -41,10 +58,9 @@ async def route_direction_handler(
         bus_number_candidate, direction_str = query.data.split(",")
         direction = 1 if direction_str == "2" else 2
     m = re.match(REGEX_ROUTE, bus_number_candidate)
-    if m is None or m.group(2) is None:
-        # pacify typechecker
+    if m is None or m.group(1) is None:  # pacify typechecker
         return
-    bus_number = m.group(2)
+    bus_number = m.group(1)
 
     # craft message
     app_state = get_app_state(context.application)
