@@ -9,9 +9,9 @@ from message_formatters.bus_stop_search import bus_stop_search_msg
 
 # search opp heavy
 # /search pei
-REGEX_SEARCH = r"\/?search\s*(.*)"
+REGEX_SEARCH = r"^\/?search\s*(.*)"
 # <STOPS_CHECKSUM>,<PAGE_NUM>,<QUERY>
-REGEX_SEARCH_CALLBACK = r"(\w{8})\,(\d{1,3}),(.{1,50})"
+REGEX_SEARCH_CALLBACK = r"(\w{8})\,(\d{1,3})\,(.{1,50})"
 
 _MAX_QUERY_LENGTH_EXCEEDED = """Unable to process search of more than 50 characters
 

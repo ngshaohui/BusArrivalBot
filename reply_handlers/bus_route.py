@@ -10,7 +10,7 @@ from utils.bot_utils import get_chat_id
 
 # route
 # /route
-REGEX_ROUTE_DANGLING = r"^\/?route$"  # dangling keywords without the bus number
+REGEX_ROUTE_DANGLING = r"^\/?route\s*$"  # dangling keywords without the bus number
 # 67
 # /961M
 # route 2

@@ -15,7 +15,7 @@ from .settings_consent import settings_not_enabled_message
 
 # list
 # /list
-REGEX_LIST_SAVED_STOPS = r"\/?list"
+REGEX_LIST_SAVED_STOPS = r"^\/?list\s*$"
 
 
 async def list_saved_stops(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

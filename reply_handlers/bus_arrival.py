@@ -13,7 +13,7 @@ from utils.bot_utils import get_chat_id
 
 # 34120
 # /29125
-REGEX_STOP_CODE = r"\/?(\d{5})"
+REGEX_STOP_CODE = r"^\/?(\d{5})$"
 
 
 def make_refresh_button(stop_id: str) -> list[list[InlineKeyboardButton]]:
