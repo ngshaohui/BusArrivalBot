@@ -74,3 +74,9 @@ def test_change_in_attribute():
     ls = deepcopy(STOPS)
     ls[0]["Description"] = "this changed"
     assert get_dict_list_checksum(STOPS) != get_dict_list_checksum(ls)
+
+
+def test_different_key_order():
+    d1 = [{"foo": 1, "bar": "bar", "baz": 1.23}]
+    d2 = [{"bar": "bar", "baz": 1.23, "foo": 1}]
+    assert get_dict_list_checksum(d1) == get_dict_list_checksum(d2)

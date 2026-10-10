@@ -5,7 +5,8 @@ from functools import reduce
 
 def _get_dict_hash(d: Mapping[str, object]) -> bytes:
     msg = hashlib.sha3_256()
-    for v in d.values():
+    for key in sorted(d):
+        v = d[key]
         if isinstance(v, str):
             msg.update(v.encode())
         else:
