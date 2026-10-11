@@ -73,7 +73,7 @@ async def location_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     latitude = update.message.location.latitude
     longitude = update.message.location.longitude
     app_state = get_app_state(context.application)
-    nearest_stops: list[BusStop] = app_state.bus_service.get_nearest_stops(
+    nearest_stops: list[BusStop] = app_state.bus_stop_utility.get_nearest_stops(
         (latitude, longitude), 3
     )
 

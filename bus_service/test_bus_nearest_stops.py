@@ -1,9 +1,10 @@
 import random
-import unittest
+
+import pytest
 
 from utils.custom_typings import BusStop
 
-from .bus_stops import bus_stop_utility
+from .bus_stops import BusStopUtility
 
 STOPS: list[BusStop] = [
     {
@@ -53,15 +54,14 @@ COORD = (1.397894, 103.7505486)
 NEAREST_STOP_CODES = ["45359", "45029", "44539", "46119", "59009"]
 
 
-class TestGetNearestStop(unittest.TestCase):
-    def test_shuffled(self):
-        for _ in range(10):
-            random.shuffle(STOPS)
-            get_nearest_stops, _, _ = bus_stop_utility(STOPS)
-            nearest_stops = get_nearest_stops(COORD, 5)
-            stop_codes = [stop["BusStopCode"] for stop in nearest_stops]
-            self.assertEqual(stop_codes, NEAREST_STOP_CODES)
+@pytest.fixture
+def bus_stop_utility():
+    random.shuffle(STOPS)
+    return BusStopUtility(STOPS)
 
 
-if __name__ == "__main__":
-    unittest.main()
+@pytest.mark.parametrize("_", range(10))
+def test_shuffled(bus_stop_utility: BusStopUtility, _):
+    nearest_stops = bus_stop_utility.get_nearest_stops(COORD, 5)
+    stop_codes = [stop["BusStopCode"] for stop in nearest_stops]
+    assert stop_codes == NEAREST_STOP_CODES
