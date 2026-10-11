@@ -19,8 +19,7 @@ REGEX_ROUTE = r"^\/?(?:route)?\s*(\d{1,3}[A-Za-z]?)$"
 
 _USER_ERR_MSG_DANGLING_ROUTE_COMMAND = """A valid bus number is required for displaying bus route
 
-E.g. `route 67`
-"""
+E.g. `route 67`"""
 
 
 async def route_direction_handler(

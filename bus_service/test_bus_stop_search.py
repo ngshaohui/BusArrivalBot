@@ -2,7 +2,7 @@ import pytest
 
 from utils.custom_typings import BusStop
 
-from .bus_stops import SearchPossibleStops, bus_stop_utility
+from .bus_stops import BusStopUtility
 
 STOPS: list[BusStop] = [
     {
@@ -58,52 +58,50 @@ STOPS: list[BusStop] = [
 
 
 @pytest.fixture
-def search_possible_stops():
-    _, _, search_possible_stops = bus_stop_utility(STOPS)
-    return search_possible_stops
+def bus_stop_utility():
+    bus_stop_utility = BusStopUtility(STOPS)
+    return bus_stop_utility
 
 
-def test_search_single_stop_exact_match(search_possible_stops: SearchPossibleStops):
-    stops = search_possible_stops(["Resords", "World", "Sentosa"])
+def test_search_single_stop_exact_match(bus_stop_utility: BusStopUtility):
+    stops = bus_stop_utility.search_possible_stops(["Resords", "World", "Sentosa"])
     assert stops == [STOPS[0]]
 
 
-def test_search_single_stop_partial_match(search_possible_stops: SearchPossibleStops):
-    stops = search_possible_stops(["Sentosa"])
+def test_search_single_stop_partial_match(bus_stop_utility: BusStopUtility):
+    stops = bus_stop_utility.search_possible_stops(["Sentosa"])
     assert stops == [STOPS[0]]
 
 
-def test_search_multiple_stops(search_possible_stops: SearchPossibleStops):
-    stops = search_possible_stops(["stn"])
+def test_search_multiple_stops(bus_stop_utility: BusStopUtility):
+    stops = bus_stop_utility.search_possible_stops(["stn"])
     assert sorted([stop["BusStopCode"] for stop in stops]) == sorted(
         [STOPS[4]["BusStopCode"], STOPS[6]["BusStopCode"]]
     )
 
 
-def test_search_keyword_expansion(search_possible_stops: SearchPossibleStops):
-    stops = search_possible_stops(["opp", "vehicle", "park"])
+def test_search_keyword_expansion(bus_stop_utility: BusStopUtility):
+    stops = bus_stop_utility.search_possible_stops(["opp", "vehicle", "park"])
     assert stops == [STOPS[1]]
 
 
-def test_search_multiple_stops_keyword_expansion(
-    search_possible_stops: SearchPossibleStops,
-):
-    stops = search_possible_stops(["station"])
+def test_search_multiple_stops_keyword_expansion(bus_stop_utility: BusStopUtility):
+    stops = bus_stop_utility.search_possible_stops(["station"])
     assert sorted([stop["BusStopCode"] for stop in stops]) == sorted(
         [STOPS[4]["BusStopCode"], STOPS[6]["BusStopCode"]]
     )
 
 
-def test_search_no_stops(search_possible_stops: SearchPossibleStops):
-    stops = search_possible_stops(["changi"])
+def test_search_no_stops(bus_stop_utility: BusStopUtility):
+    stops = bus_stop_utility.search_possible_stops(["changi"])
     assert stops == []
 
 
-def test_search_mixed_case(search_possible_stops: SearchPossibleStops):
-    stops = search_possible_stops(["sEntosA"])
+def test_search_mixed_case(bus_stop_utility: BusStopUtility):
+    stops = bus_stop_utility.search_possible_stops(["sEntosA"])
     assert stops == [STOPS[0]]
 
 
-def test_search_partial_multiple_keywords(search_possible_stops: SearchPossibleStops):
-    stops = search_possible_stops(["choa", "kang"])
+def test_search_partial_multiple_keywords(bus_stop_utility: BusStopUtility):
+    stops = bus_stop_utility.search_possible_stops(["choa", "kang"])
     assert stops == [STOPS[4]]

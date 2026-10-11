@@ -75,21 +75,17 @@ class BusStopUtility:
         """
         get a list of bus stops that match a search query
         """
-        query_tokens = (token.lower() for token in query)
-        m_query_tokens = map(transform_query_token, query_tokens)
-        stop_ids_set: set[str] = set()
+        # get the short-form representations of keywords (e.g. park -> pk)
+        transformed_tokens = {transform_query_token(token.lower()) for token in query}
 
-        for query_token in m_query_tokens:
-            if query_token in self.token_map:
-                if len(stop_ids_set) == 0:
-                    # populate empty set
-                    stop_ids_set.update(self.token_map[query_token])
-                else:
-                    stop_ids_set = set.intersection(
-                        stop_ids_set, self.token_map[query_token]
-                    )
+        # get stop ids that match all the keywords (intersection of all sets)
+        stop_ids = [self.token_map.get(token) for token in transformed_tokens]
+        filtered_stop_ids = [stop_id for stop_id in stop_ids if stop_id is not None]
+        common_stop_ids = (
+            set.intersection(*filtered_stop_ids) if filtered_stop_ids else set()
+        )
 
-        potential_bus_stops = map(self.get_stop_info, stop_ids_set)
+        potential_bus_stops = [self.get_stop_info(stop) for stop in common_stop_ids]
         bus_stops = [stop for stop in potential_bus_stops if stop is not None]
         # TODO sort
         return bus_stops
