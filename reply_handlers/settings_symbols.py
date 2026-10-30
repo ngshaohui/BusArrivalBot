@@ -15,6 +15,7 @@ from .inline_buttons import BACK_TO_SETTINGS_BUTTON
 class SymbolOptions(IntEnum):
     SHOW_LOAD = auto()
     SHOW_TYPE = auto()
+    SHOW_SEQUENCE = auto()
 
 
 async def show_symbols_handler(
@@ -36,23 +37,48 @@ async def show_symbols_handler(
     parts = query.data.split(",")
     if len(parts) == 3:
         option = int(parts[1])
-        value = bool(int(parts[2]))
+        value = int(parts[2])
         match option:
             case SymbolOptions.SHOW_LOAD.value:
                 await app_state.user_data_adapter.save_user_settings(
-                    chat_id, value, user_settings.show_type
+                    chat_id,
+                    bool(value),
+                    user_settings.show_type,
+                    user_settings.show_sequence,
                 )
                 # preemptively use given value to display
-                user_settings = UserSettings(value, user_settings.show_type)
+                user_settings = UserSettings(
+                    bool(value),
+                    user_settings.show_type,
+                    user_settings.show_sequence,
+                )
             case SymbolOptions.SHOW_TYPE.value:
                 await app_state.user_data_adapter.save_user_settings(
-                    chat_id, user_settings.show_load, value
+                    chat_id,
+                    user_settings.show_load,
+                    bool(value),
+                    user_settings.show_sequence,
                 )
-                user_settings = UserSettings(user_settings.show_load, value)
+                user_settings = UserSettings(
+                    user_settings.show_load,
+                    bool(value),
+                    user_settings.show_sequence,
+                )
+            case SymbolOptions.SHOW_SEQUENCE.value:
+                await app_state.user_data_adapter.save_user_settings(
+                    chat_id,
+                    user_settings.show_load,
+                    user_settings.show_type,
+                    value,
+                )
+                user_settings = UserSettings(
+                    user_settings.show_load, user_settings.show_type, value
+                )
 
     text = f"""Show symbols for bus arrival information
 Bus **Load** (**{"enabled ✅" if user_settings.show_load else "disabled"}**)
 Bus Type (**{"enabled ✅" if user_settings.show_type else "disabled"}**)
+Bus Sequence (**{user_settings.show_sequence}**)
 
 {SYMBOLS_LEGEND}"""
 
@@ -69,6 +95,24 @@ Bus Type (**{"enabled ✅" if user_settings.show_type else "disabled"}**)
                     f"{'Enable' if not user_settings.show_type else 'Disable'} Bus Type",
                     callback_data=f"{SETTINGS_ACTIONS.SYMBOL_SHOW.value},{SymbolOptions.SHOW_TYPE.value},{int(not user_settings.show_type)}",
                 )
+            ],
+            [
+                InlineKeyboardButton(
+                    f"{'0 🎉' if user_settings.show_sequence == 0 else '0'}",
+                    callback_data=f"{SETTINGS_ACTIONS.SYMBOL_SHOW.value},{SymbolOptions.SHOW_SEQUENCE.value},0",
+                ),
+                InlineKeyboardButton(
+                    f"{'3 🎉' if user_settings.show_sequence == 3 else '3'}",
+                    callback_data=f"{SETTINGS_ACTIONS.SYMBOL_SHOW.value},{SymbolOptions.SHOW_SEQUENCE.value},3",
+                ),
+                InlineKeyboardButton(
+                    f"{'6 🎉' if user_settings.show_sequence == 6 else '6'}",
+                    callback_data=f"{SETTINGS_ACTIONS.SYMBOL_SHOW.value},{SymbolOptions.SHOW_SEQUENCE.value},6",
+                ),
+                InlineKeyboardButton(
+                    f"{'9 🎉' if user_settings.show_sequence == 9 else '9'}",
+                    callback_data=f"{SETTINGS_ACTIONS.SYMBOL_SHOW.value},{SymbolOptions.SHOW_SEQUENCE.value},9",
+                ),
             ],
             BACK_TO_SETTINGS_BUTTON,
         ]

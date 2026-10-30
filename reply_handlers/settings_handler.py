@@ -99,6 +99,6 @@ def register_settings_handlers(
     application.add_handler(
         CallbackQueryHandler(
             show_symbols_handler,
-            pattern=rf"{SETTINGS_ACTIONS.SYMBOL_SHOW.value}(,\d,[01])?",
+            pattern=rf"{SETTINGS_ACTIONS.SYMBOL_SHOW.value}(,\d,\d)?",
         )
     )

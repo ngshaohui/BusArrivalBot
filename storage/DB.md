@@ -26,11 +26,12 @@ This has the added benefit of denoting the order the list is to be shown to the 
 
 ### Table: `user_settings`
 
-| column                | type    | constraints          | purpose         |
-| --------------------- | ------- | -------------------- | --------------- |
-| chat_id (PK, FK)      | INTEGER | NOT NULL             | chat_id of user |
-| show_load             | INTEGER | NOT NULL DEFAULT 0   | show bus load   |
-| show_type             | INTEGER | NOT NULL DEFAULT 0   | show bus load   |
+| column                | type    | constraints          | purpose           |
+| --------------------- | ------- | -------------------- | ----------------- |
+| chat_id (PK, FK)      | INTEGER | NOT NULL             | chat_id of user   |
+| show_load             | INTEGER | NOT NULL DEFAULT 0   | show bus load     |
+| show_type             | INTEGER | NOT NULL DEFAULT 0   | show bus load     |
+| show_sequence     | INTEGER | NOT NULL DEFAULT 0   | show bus sequence |
 
 The columns `show_load` and `show_type` shall be an integer 0 (false, default) or 1 (true).
 
@@ -55,7 +56,8 @@ CREATE TABLE user_settings (
         REFERENCES users(chat_id)
         ON DELETE CASCADE,
     show_load INTEGER NOT NULL DEFAULT 0,
-    show_type INTEGER NOT NULL DEFAULT 0
+    show_type INTEGER NOT NULL DEFAULT 0,
+    show_sequence INTEGER NOT NULL DEFAULT 0
 );
 
 -- future implementation, not present
