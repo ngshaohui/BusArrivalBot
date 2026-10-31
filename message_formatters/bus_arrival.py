@@ -1,5 +1,6 @@
 import datetime
 import zoneinfo
+from typing import NamedTuple
 
 from bus_service.bus_arrival import get_arrival_time_mins
 from utils.custom_typings import BusInfo, BusStop, NextBusInfo, UserSettings
@@ -71,8 +72,41 @@ def next_bus_msg(
         bus_arrivals_msg(bus_service, cur_unix_time, user_settings)
         for bus_service in services
     ]
+    arrival_sequence_text = ""
+    if user_settings.show_sequence > 0:
+        arrival_sequence = bus_arrival_sequence(services, cur_unix_time, user_settings)
+        arrival_sequence_text = f"\n\n{arrival_sequence}"
     arrivals_text = "\n\n".join(arrivals)
     formatted_datetime = datetime.datetime.fromtimestamp(
         cur_unix_time, tz=zoneinfo.ZoneInfo("Asia/Singapore")
     ).strftime("%-d %b %-I.%M%p")
-    return f"{title}\n\n{arrivals_text}\n\nLast refreshed {formatted_datetime}"
+    return f"{title}{arrival_sequence_text}\n\n{arrivals_text}\n\nLast refreshed {formatted_datetime}"
+
+
+class BusSequence(NamedTuple):
+    arrival_time: str
+    bus_service: str
+
+
+def bus_arrival_sequence(
+    services: list[BusInfo], cur_unix_time: int, user_settings: UserSettings
+) -> str:
+    buses_in_sequence: list[BusSequence] = []
+
+    for service in services:
+        service_no = service["ServiceNo"]
+
+        for bus in ["NextBus", "NextBus2", "NextBus3"]:
+            arrival_time = service[bus]["EstimatedArrival"]
+
+            if arrival_time == "":
+                continue
+
+            buses_in_sequence.append(BusSequence(arrival_time, service_no))
+
+    buses_in_sequence.sort(key=lambda bus: bus.arrival_time)
+
+    return " → ".join(
+        f"{bus.bus_service} ({get_arrival_time(bus.arrival_time, cur_unix_time)})"
+        for bus in buses_in_sequence[: user_settings.show_sequence]
+    )
